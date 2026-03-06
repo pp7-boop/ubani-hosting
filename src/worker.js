@@ -31,7 +31,11 @@ async function register(request, env) {
 
   const db = getTursoClient(env);
   const id = crypto.randomUUID();
-  const passwordHash = await hashPassword(body.password);
+  const configuredIterations = Number(env.PASSWORD_HASH_ITERATIONS || "120000");
+  const iterations = Number.isInteger(configuredIterations) && configuredIterations > 0
+    ? configuredIterations
+    : 120000;
+  const passwordHash = await hashPassword(body.password, iterations);
 
   try {
     await db.execute({
@@ -178,7 +182,13 @@ export default {
 
       return json({ message: "Ubani API" });
     } catch (error) {
-      return json({ error: error.message || "Unexpected error" }, { status: 500 });
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+            ? error
+            : "Unexpected error";
+      return json({ error: message }, { status: 500 });
     }
   }
 };

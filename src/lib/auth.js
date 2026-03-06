@@ -1,4 +1,5 @@
 const encoder = new TextEncoder();
+const DEFAULT_PBKDF2_ITERATIONS = 120000;
 
 function toBase64Url(bytes) {
   const base64 = btoa(String.fromCharCode(...bytes));
@@ -24,8 +25,7 @@ function ensureJwtSecret(env) {
   return secret;
 }
 
-export async function hashPassword(password) {
-  const iterations = 210000;
+export async function hashPassword(password, iterations = DEFAULT_PBKDF2_ITERATIONS) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
