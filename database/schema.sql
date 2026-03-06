@@ -39,7 +39,6 @@ CREATE TABLE IF NOT EXISTS tickets(
   FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
--- Turso replacement for object storage (R2): each deployed file is persisted in SQL.
 CREATE TABLE IF NOT EXISTS site_files(
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
@@ -53,3 +52,14 @@ CREATE TABLE IF NOT EXISTS site_files(
   FOREIGN KEY(project_id) REFERENCES projects(id),
   FOREIGN KEY(user_id) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS migrations(
+  id TEXT PRIMARY KEY,
+  applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
+CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);
+CREATE INDEX IF NOT EXISTS idx_site_files_project_id ON site_files(project_id);
+CREATE INDEX IF NOT EXISTS idx_site_files_user_id ON site_files(user_id);
+CREATE INDEX IF NOT EXISTS idx_site_files_project_path ON site_files(project_id, path);

@@ -2,19 +2,23 @@
 
 Ubani Hosting API scaffold using Cloudflare Workers + Turso (`libsql`) for persistent data and deployment file storage.
 
-## What changed
+## Security improvements
 
-R2 storage was replaced with Turso-backed SQL storage:
-- Old pattern: `env.SITES.put(...)` to an R2 bucket
-- New pattern: files are inserted into `site_files` in Turso via `@libsql/client/web`
+- Passwords are stored as PBKDF2-SHA256 hashes (never plaintext)
+- JWT authentication (HS256) protects private endpoints
+- User identity is taken from JWT `sub`, not request body
 
 ## Endpoints
 
+Public:
 - `POST /api/register`
 - `POST /api/login`
+- `GET /health`
+
+Protected (`Authorization: Bearer <token>`):
 - `POST /api/deploy`
 - `POST /api/invoice`
-- `GET /health`
+- `GET /api/me`
 
 ## Local setup
 
@@ -30,11 +34,20 @@ npm install
 cp .dev.vars.example .dev.vars
 ```
 
-3. Set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` in `.dev.vars`.
+3. Set these values in `.dev.vars`:
+- `TURSO_DATABASE_URL`
+- `TURSO_AUTH_TOKEN`
+- `JWT_SECRET`
 
-4. Apply schema from `database/schema.sql` to your Turso database.
+4. Run DB migrations against Turso:
 
-5. Run locally:
+```bash
+export TURSO_DATABASE_URL="libsql://ubani-db-ubani.aws-eu-west-1.turso.io"
+export TURSO_AUTH_TOKEN="<your-token>"
+npm run migrate
+```
+
+5. Run Worker locally:
 
 ```bash
 npm run dev
@@ -47,14 +60,31 @@ Set production secrets and deploy Worker:
 ```bash
 wrangler secret put TURSO_DATABASE_URL
 wrangler secret put TURSO_AUTH_TOKEN
+wrangler secret put JWT_SECRET
 npm run deploy
 ```
 
-## Example deploy payload
+## Example auth flow
+
+Register:
 
 ```json
 {
-  "userId": "user_123",
+  "email": "owner@company.co.za",
+  "password": "StrongPassword123"
+}
+```
+
+Login response contains `token`. Use it for protected routes:
+
+```http
+Authorization: Bearer <token>
+```
+
+## Example deploy payload (protected)
+
+```json
+{
   "domain": "example.co.za",
   "files": [
     {
