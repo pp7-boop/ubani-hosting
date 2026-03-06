@@ -1,0 +1,7 @@
+name = "ubani-hosting-api"
+main = "src/worker.js"
+compatibility_date = "2026-03-06"
+workers_dev = true
+
+[observability]
+enabled = true
