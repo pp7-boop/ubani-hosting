@@ -154,6 +154,14 @@ export default {
     const url = new URL(request.url);
 
     try {
+      if (request.method === "GET" && url.pathname === "/") {
+        return json({ message: "Ubani API", health: "/health" });
+      }
+
+      if (request.method === "GET" && url.pathname === "/favicon.ico") {
+        return new Response(null, { status: 204 });
+      }
+
       if (request.method === "POST" && url.pathname === "/api/register") return register(request, env);
       if (request.method === "POST" && url.pathname === "/api/login") return login(request, env);
 
