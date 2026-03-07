@@ -1,3 +1,5 @@
+import { BRAND_LOGO_DATA_URL, LANDING_ART_DATA_URL } from "./embedded-assets.js";
+
 function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
   return `<!doctype html>
 <html lang="en">
@@ -669,4 +671,35 @@ document.getElementById("loadRevenueBtn").onclick = async () => {
   }
 
   return null;
+}
+
+export function renderDesignerLanding(apiOrigin) {
+  return shell({
+    title: "Ubani Studio | Web Design & Build",
+    nav: [
+      `<a href="/"><strong>Studio</strong></a>`,
+      `<a href="${apiOrigin}/portal/register">Client Portal</a>`,
+      `<a href="${apiOrigin}/contact">Contact</a>`
+    ].join(""),
+    apiOrigin,
+    body: `
+    <section class="hero hosting reveal" style="background:
+      linear-gradient(180deg, rgba(6,13,31,0.72), rgba(6,13,31,0.92)),
+      url('${LANDING_ART_DATA_URL}') center/cover no-repeat;">
+      <img src="${BRAND_LOGO_DATA_URL}" alt="Ubani logo" style="width:210px;max-width:56%;display:block;margin-bottom:14px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));" />
+      <h1>WEB DESIGN STUDIO<br/>FOR SOUTH AFRICA</h1>
+      <p>Design systems, branded websites, and production-ready build pipelines for growing businesses.</p>
+      <p>
+        <span class="pill">Branding</span>
+        <span class="pill">Web Design</span>
+        <span class="pill">Production Build</span>
+      </p>
+      <p style="margin-top:12px;"><a class="cta" href="${apiOrigin}/portal/register">Start a Project</a></p>
+    </section>
+    <section class="grid three">
+      <article class="card reveal" data-delay="1"><h3>Identity + Layout</h3><p>Brand direction, typography systems, and conversion-focused page structure.</p></article>
+      <article class="card reveal" data-delay="2"><h3>Build + Integrate</h3><p>Frontend implementation, CMS/API integration, and deployment-ready handoff.</p></article>
+      <article class="card reveal" data-delay="3"><h3>Operate + Iterate</h3><p>Analytics-informed updates, SEO refinements, and ongoing improvements.</p></article>
+    </section>`
+  });
 }

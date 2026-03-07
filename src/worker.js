@@ -1,6 +1,6 @@
 import { getTursoClient } from "./lib/turso.js";
 import { getAuthUserId, hashPassword, signJwt, verifyPassword } from "./lib/auth.js";
-import { renderFrontend } from "./frontend.js";
+import { renderDesignerLanding, renderFrontend } from "./frontend.js";
 
 const DEFAULT_PASSWORD_HASH_ITERATIONS = 15000;
 const MIN_PASSWORD_HASH_ITERATIONS = 10000;
@@ -626,6 +626,7 @@ export default {
     const url = new URL(request.url);
     const clientIp = getClientIp(request);
     const isHead = request.method === "HEAD";
+    const host = url.hostname.toLowerCase();
 
     try {
       if (request.method === "GET" && url.pathname === "/robots.txt") {
@@ -637,7 +638,10 @@ export default {
       }
 
       if (request.method === "GET" && url.pathname === "/") {
-        const response = html(renderFrontend(url.pathname, getCanonicalApiOrigin(request, env)));
+        const homepage = host === "www.ubanihosting.co.za"
+          ? renderDesignerLanding(getCanonicalApiOrigin(request, env))
+          : renderFrontend(url.pathname, getCanonicalApiOrigin(request, env));
+        const response = html(homepage);
         return isHead ? headFromResponse(response) : response;
       }
 
