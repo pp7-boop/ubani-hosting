@@ -113,6 +113,12 @@ wrangler secret put PAYMENT_CANCEL_URL
 BASE_URL=https://api.ubanihosting.co.za bash smoke-test.sh
 ```
 
+7. Run full production verification:
+
+```bash
+bash scripts/verify-production.sh
+```
+
 ## Billing flow
 
 1. Client calls `POST /api/invoice/checkout` with `amount` (in cents).
