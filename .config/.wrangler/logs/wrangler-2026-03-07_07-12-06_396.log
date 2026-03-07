@@ -1,0 +1,406 @@
+
+--- 2026-03-07T07:12:06.649Z debug
+🪵  Writing logs to "/workspaces/ubani-hosting/.config/.wrangler/logs/wrangler-2026-03-07_07-12-06_396.log"
+---
+
+--- 2026-03-07T07:12:06.649Z debug
+.env file not found at "/workspaces/ubani-hosting/.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-03-07T07:12:06.650Z debug
+.env file not found at "/workspaces/ubani-hosting/.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-03-07T07:12:06.685Z log
+
+ ⛅️ wrangler 4.71.0
+───────────────────
+---
+
+--- 2026-03-07T07:12:06.698Z debug
+Metrics dispatcher: Posting data {"deviceId":"7135e9e5-d6fb-4657-81a4-eaecb7fedad0","event":"wrangler command started","timestamp":1772867526698,"properties":{"amplitude_session_id":1772867526694,"amplitude_event_id":0,"wranglerVersion":"4.71.0","wranglerMajorVersion":4,"wranglerMinorVersion":71,"wranglerPatchVersion":0,"osPlatform":"Linux","osVersion":"#50~22.04.1-Ubuntu SMP Wed Dec  3 15:13:22 UTC 2025","nodeVersion":24,"packageManager":"npm","isFirstUsage":false,"configFileType":"toml","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":true,"hasAssets":false,"agent":null,"argsUsed":[],"argsCombination":"","sanitizedCommand":"deploy","sanitizedArgs":{}}}
+---
+
+--- 2026-03-07T07:12:06.714Z debug
+Metrics dispatcher: Posting data {"deviceId":"7135e9e5-d6fb-4657-81a4-eaecb7fedad0","event":"autoconfig_process_started","timestamp":1772867526714,"properties":{"amplitude_session_id":1772867526714,"amplitude_event_id":0,"wranglerVersion":"4.71.0","wranglerMajorVersion":4,"wranglerMinorVersion":71,"wranglerPatchVersion":0,"osPlatform":"Linux","osVersion":"#50~22.04.1-Ubuntu SMP Wed Dec  3 15:13:22 UTC 2025","nodeVersion":24,"packageManager":"npm","isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":true,"hasAssets":false,"agent":null,"category":"Workers","os":"linux:x64","autoConfigId":"c4499661-16aa-4416-b5e2-95e5756782c7","command":"wrangler deploy","dryRun":false}}
+---
+
+--- 2026-03-07T07:12:06.715Z debug
+Running autoconfig detection in /workspaces/ubani-hosting...
+---
+
+--- 2026-03-07T07:12:06.715Z debug
+Metrics dispatcher: Posting data {"deviceId":"7135e9e5-d6fb-4657-81a4-eaecb7fedad0","event":"autoconfig_detection_started","timestamp":1772867526715,"properties":{"amplitude_session_id":1772867526715,"amplitude_event_id":0,"wranglerVersion":"4.71.0","wranglerMajorVersion":4,"wranglerMinorVersion":71,"wranglerPatchVersion":0,"osPlatform":"Linux","osVersion":"#50~22.04.1-Ubuntu SMP Wed Dec  3 15:13:22 UTC 2025","nodeVersion":24,"packageManager":"npm","isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":true,"hasAssets":false,"agent":null,"category":"Workers","os":"linux:x64","autoConfigId":"c4499661-16aa-4416-b5e2-95e5756782c7","command":"wrangler deploy"}}
+---
+
+--- 2026-03-07T07:12:06.731Z debug
+Metrics dispatcher: Posting data {"deviceId":"7135e9e5-d6fb-4657-81a4-eaecb7fedad0","event":"autoconfig_process_ended","timestamp":1772867526731,"properties":{"amplitude_session_id":1772867526731,"amplitude_event_id":0,"wranglerVersion":"4.71.0","wranglerMajorVersion":4,"wranglerMinorVersion":71,"wranglerPatchVersion":0,"osPlatform":"Linux","osVersion":"#50~22.04.1-Ubuntu SMP Wed Dec  3 15:13:22 UTC 2025","nodeVersion":24,"packageManager":"npm","isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":true,"hasAssets":false,"agent":null,"category":"Workers","os":"linux:x64","autoConfigId":"c4499661-16aa-4416-b5e2-95e5756782c7","command":"wrangler deploy","dryRun":false,"success":true}}
+---
+
+--- 2026-03-07T07:12:06.753Z debug
+Retrieving cached values for account from node_modules/.cache/wrangler
+---
+
+--- 2026-03-07T07:12:06.753Z debug
+Starting verifyWorkerMatchesCITag() with tag: undefined, name: ubani-hosting-api
+---
+
+--- 2026-03-07T07:12:06.753Z debug
+No WRANGLER_CI_MATCH_TAG variable provided, aborting verifyWorkerMatchesCITag()
+---
+
+--- 2026-03-07T07:12:06.754Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/22f8a8390779ed8d3951cab297d2b32a/workers/services/ubani-hosting-api
+---
+
+--- 2026-03-07T07:12:06.754Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:06.755Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:06.755Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:06.755Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-03-07T07:12:07.757Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-03-07T07:12:07.757Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:07.757Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:07.757Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-03-07T07:12:07.761Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/22f8a8390779ed8d3951cab297d2b32a/workers/scripts/ubani-hosting-api/deployments
+---
+
+--- 2026-03-07T07:12:07.761Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:07.761Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:07.761Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:07.761Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-03-07T07:12:08.479Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-03-07T07:12:08.479Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:08.479Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:08.479Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-03-07T07:12:08.543Z log
+Total Upload: 158.74 KiB / gzip: 32.93 KiB
+---
+
+--- 2026-03-07T07:12:08.544Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/22f8a8390779ed8d3951cab297d2b32a/workers/scripts/ubani-hosting-api/settings
+---
+
+--- 2026-03-07T07:12:08.544Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:08.544Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:08.544Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:08.544Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-03-07T07:12:09.363Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-03-07T07:12:09.363Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:09.363Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:09.363Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-03-07T07:12:09.365Z debug
+-- START CF API REQUEST: POST https://api.cloudflare.com/client/v4/accounts/22f8a8390779ed8d3951cab297d2b32a/workers/scripts/ubani-hosting-api/versions
+---
+
+--- 2026-03-07T07:12:09.365Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:09.365Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:09.365Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:09.367Z debug
+BODY: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:09.367Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-03-07T07:12:11.679Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-03-07T07:12:11.679Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:11.679Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:11.679Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-03-07T07:12:11.680Z debug
+-- START CF API REQUEST: POST https://api.cloudflare.com/client/v4/accounts/22f8a8390779ed8d3951cab297d2b32a/workers/scripts/ubani-hosting-api/deployments
+---
+
+--- 2026-03-07T07:12:11.680Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:11.680Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:11.680Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:11.680Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-03-07T07:12:12.643Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-03-07T07:12:12.643Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:12.643Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:12.643Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-03-07T07:12:12.643Z debug
+-- START CF API REQUEST: PATCH https://api.cloudflare.com/client/v4/accounts/22f8a8390779ed8d3951cab297d2b32a/workers/scripts/ubani-hosting-api/script-settings
+---
+
+--- 2026-03-07T07:12:12.644Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:12.644Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:12.644Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:12.644Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-03-07T07:12:13.580Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-03-07T07:12:13.580Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:13.580Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:13.580Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-03-07T07:12:13.582Z log
+Uploaded ubani-hosting-api (5.82 sec)
+---
+
+--- 2026-03-07T07:12:13.583Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/22f8a8390779ed8d3951cab297d2b32a/workers/subdomain
+---
+
+--- 2026-03-07T07:12:13.583Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:13.583Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:13.583Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:13.583Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-03-07T07:12:14.276Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-03-07T07:12:14.276Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:14.276Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:14.276Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-03-07T07:12:14.276Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/22f8a8390779ed8d3951cab297d2b32a/workers/scripts/ubani-hosting-api/subdomain
+---
+
+--- 2026-03-07T07:12:14.276Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:14.276Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:14.276Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:14.276Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-03-07T07:12:15.097Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-03-07T07:12:15.097Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:15.097Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:15.097Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-03-07T07:12:15.098Z debug
+-- START CF API REQUEST: POST https://api.cloudflare.com/client/v4/accounts/22f8a8390779ed8d3951cab297d2b32a/workers/scripts/ubani-hosting-api/subdomain
+---
+
+--- 2026-03-07T07:12:15.098Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:15.098Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:15.098Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:15.098Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-03-07T07:12:16.291Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-03-07T07:12:16.291Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:16.291Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T07:12:16.291Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-03-07T07:12:16.291Z log
+Deployed ubani-hosting-api triggers (2.71 sec)
+---
+
+--- 2026-03-07T07:12:16.291Z log
+  https://ubani-hosting-api.ubani-hosting.workers.dev
+---
+
+--- 2026-03-07T07:12:16.292Z log
+Current Version ID: d99fdf34-d309-4e7a-977e-003fef9c66e1
+---
+
+--- 2026-03-07T07:12:16.292Z debug
+Metrics dispatcher: Posting data {"deviceId":"7135e9e5-d6fb-4657-81a4-eaecb7fedad0","event":"deploy worker script","timestamp":1772867536292,"properties":{"amplitude_session_id":1772867536292,"amplitude_event_id":0,"wranglerVersion":"4.71.0","wranglerMajorVersion":4,"wranglerMinorVersion":71,"wranglerPatchVersion":0,"osPlatform":"Linux","osVersion":"#50~22.04.1-Ubuntu SMP Wed Dec  3 15:13:22 UTC 2025","nodeVersion":24,"packageManager":"npm","isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":true,"hasAssets":false,"agent":null,"category":"Workers","os":"linux:x64","usesTypeScript":false,"durationMs":9539}}
+---
+
+--- 2026-03-07T07:12:16.294Z debug
+Metrics dispatcher: Posting data {"deviceId":"7135e9e5-d6fb-4657-81a4-eaecb7fedad0","event":"wrangler command completed","timestamp":1772867536294,"properties":{"amplitude_session_id":1772867526694,"amplitude_event_id":1,"wranglerVersion":"4.71.0","wranglerMajorVersion":4,"wranglerMinorVersion":71,"wranglerPatchVersion":0,"osPlatform":"Linux","osVersion":"#50~22.04.1-Ubuntu SMP Wed Dec  3 15:13:22 UTC 2025","nodeVersion":24,"packageManager":"npm","isFirstUsage":false,"configFileType":"toml","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":true,"hasAssets":false,"agent":null,"argsUsed":[],"argsCombination":"","sanitizedCommand":"deploy","sanitizedArgs":{},"durationMs":9641}}
+---

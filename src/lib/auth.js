@@ -1,5 +1,5 @@
 const encoder = new TextEncoder();
-const DEFAULT_PBKDF2_ITERATIONS = 120000;
+const DEFAULT_PBKDF2_ITERATIONS = 15000;
 
 function toBase64Url(bytes) {
   const base64 = btoa(String.fromCharCode(...bytes));

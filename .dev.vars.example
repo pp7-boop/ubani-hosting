@@ -1,4 +1,4 @@
 TURSO_DATABASE_URL=libsql://ubani-db-ubani.aws-eu-west-1.turso.io
 TURSO_AUTH_TOKEN=replace-with-your-token
 JWT_SECRET=replace-with-a-long-random-secret
-PASSWORD_HASH_ITERATIONS=120000
+PASSWORD_HASH_ITERATIONS=15000

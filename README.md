@@ -38,7 +38,7 @@ cp .dev.vars.example .dev.vars
 - `TURSO_DATABASE_URL`
 - `TURSO_AUTH_TOKEN`
 - `JWT_SECRET`
-- `PASSWORD_HASH_ITERATIONS` (default `120000`, lower if CPU errors)
+- `PASSWORD_HASH_ITERATIONS` (default `15000`, allowed range `10000-50000`)
 
 4. Run DB migrations against Turso:
 

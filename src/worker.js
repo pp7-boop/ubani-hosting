@@ -1,6 +1,10 @@
 import { getTursoClient } from "./lib/turso.js";
 import { getAuthUserId, hashPassword, signJwt, verifyPassword } from "./lib/auth.js";
 
+const DEFAULT_PASSWORD_HASH_ITERATIONS = 15000;
+const MIN_PASSWORD_HASH_ITERATIONS = 10000;
+const MAX_PASSWORD_HASH_ITERATIONS = 50000;
+
 function json(data, init = {}) {
   return new Response(JSON.stringify(data), {
     ...init,
@@ -31,10 +35,10 @@ async function register(request, env) {
 
   const db = getTursoClient(env);
   const id = crypto.randomUUID();
-  const configuredIterations = Number(env.PASSWORD_HASH_ITERATIONS || "120000");
-  const iterations = Number.isInteger(configuredIterations) && configuredIterations > 0
-    ? configuredIterations
-    : 120000;
+  const configuredIterations = Number(env.PASSWORD_HASH_ITERATIONS || DEFAULT_PASSWORD_HASH_ITERATIONS);
+  const iterations = Number.isInteger(configuredIterations)
+    ? Math.min(Math.max(configuredIterations, MIN_PASSWORD_HASH_ITERATIONS), MAX_PASSWORD_HASH_ITERATIONS)
+    : DEFAULT_PASSWORD_HASH_ITERATIONS;
   const passwordHash = await hashPassword(body.password, iterations);
 
   try {
