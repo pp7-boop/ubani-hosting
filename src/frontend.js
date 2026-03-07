@@ -92,6 +92,19 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         background: linear-gradient(140deg, rgba(255, 255, 255, 0.9), rgba(240, 246, 255, 0.9));
         box-shadow: var(--shadow);
       }
+      .hero.hosting {
+        background:
+          radial-gradient(500px 220px at 50% 100%, rgba(255, 122, 24, 0.24) 0%, transparent 70%),
+          radial-gradient(900px 300px at 0% 0%, rgba(39, 84, 184, 0.34) 0%, transparent 60%),
+          linear-gradient(180deg, #0a1731 0%, #081126 100%);
+        border-color: rgba(103, 136, 220, 0.5);
+      }
+      .hero.hosting h1,
+      .hero.hosting p { color: #eef3ff; }
+      .hero.hosting .pill {
+        background: rgba(17, 41, 86, 0.82);
+        color: #dce9ff;
+      }
       .hero h1 {
         margin: 0 0 8px;
         font-size: clamp(1.7rem, 4vw, 2.5rem);
@@ -277,33 +290,33 @@ export function renderFrontend(pathname, apiOrigin) {
       nav: marketingNav(),
       apiOrigin,
       body: `
-      <section class="hero reveal">
-        <h1>Build and ship hosting products at startup speed</h1>
-        <p>A polished platform for South African teams with integrated deploy, billing, support, and admin workflows.</p>
+      <section class="hero hosting reveal">
+        <h1>WEB HOSTING PLATFORM<br/>FOR SOUTH AFRICA</h1>
+        <p>Infrastructure and tooling for deploying sites, managing projects, and operating customer hosting workflows.</p>
         <p>
-          <span class="pill">99.9% Uptime</span>
-          <span class="pill">24/7 Support</span>
-          <span class="pill">Free SSL</span>
+          <span class="pill">Project Deployments</span>
+          <span class="pill">Billing Integration</span>
+          <span class="pill">Admin Controls</span>
         </p>
         <div class="row" style="margin-top:12px;grid-template-columns:1fr auto;">
           <input placeholder="Enter your domain name" />
-          <a class="cta" href="/portal/register">Get Started</a>
+          <a class="cta" href="/portal/register">Register</a>
         </div>
       </section>
       <section class="grid two">
         <article class="card reveal" data-delay="1">
-          <h3>Powerful Hosting Stack</h3>
+          <h3>Platform Modules</h3>
           <ul>
-            <li>Cloudflare edge delivery and caching</li>
-            <li>Billing and payments integrated with Yoco</li>
-            <li>Project deployment with storage tracking</li>
-            <li>Admin visibility for users, invoices and revenue</li>
+            <li>Account registration and authentication APIs</li>
+            <li>Project deployment and storage tracking</li>
+            <li>Invoice and checkout session creation</li>
+            <li>Support tickets and admin reporting endpoints</li>
           </ul>
         </article>
         <article class="card accent reveal" data-delay="2">
-          <h3>Get Online Today</h3>
-          <p>Host your first site in minutes, then scale with agency-grade workflows and managed operations.</p>
-          <p style="margin-top:12px;"><a class="cta" href="/portal/register">Get Started Now</a></p>
+          <h3>Control Surfaces</h3>
+          <p>Client portal, API endpoints, and admin views are available under one routed Worker deployment.</p>
+          <p style="margin-top:12px;"><a class="cta" href="/portal/register">Open Portal</a></p>
         </article>
       </section>`
     });

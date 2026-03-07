@@ -44,7 +44,7 @@ function html(content, init = {}) {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "public, max-age=120",
       ...SECURITY_HEADERS,
-      "content-security-policy": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; connect-src 'self' https://api.ubanihosting.co.za; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+      "content-security-policy": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; connect-src 'self' https://api.ubanihosting.co.za https://cloudflareinsights.com https://*.cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
       ...(init.headers || {})
     }
   });
@@ -58,6 +58,14 @@ function text(content, init = {}) {
       ...SECURITY_HEADERS,
       ...(init.headers || {})
     }
+  });
+}
+
+function headFromResponse(response) {
+  return new Response(null, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers
   });
 }
 
@@ -617,6 +625,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const clientIp = getClientIp(request);
+    const isHead = request.method === "HEAD";
 
     try {
       if (request.method === "GET" && url.pathname === "/robots.txt") {
@@ -628,12 +637,16 @@ export default {
       }
 
       if (request.method === "GET" && url.pathname === "/") {
-        return html(renderFrontend(url.pathname, getCanonicalApiOrigin(request, env)));
+        const response = html(renderFrontend(url.pathname, getCanonicalApiOrigin(request, env)));
+        return isHead ? headFromResponse(response) : response;
       }
 
-      if (request.method === "GET") {
+      if (request.method === "GET" || isHead) {
         const frontend = renderFrontend(url.pathname, getCanonicalApiOrigin(request, env));
-        if (frontend) return html(frontend);
+        if (frontend) {
+          const response = html(frontend);
+          return isHead ? headFromResponse(response) : response;
+        }
       }
 
       if (request.method === "GET" && url.pathname === "/favicon.ico") {
@@ -659,6 +672,10 @@ export default {
       }
 
       if (request.method === "GET" && url.pathname === "/health") return json({ ok: true });
+      if (isHead && url.pathname === "/health") {
+        const response = json({ ok: true });
+        return headFromResponse(response);
+      }
 
       if (request.method === "GET" && url.pathname === "/api/admin/summary") {
         const adminError = requireAdmin(request, env);
