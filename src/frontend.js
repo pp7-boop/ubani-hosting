@@ -11,18 +11,18 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --bg: #030a19;
-        --bg-2: #071733;
-        --panel: rgba(8, 24, 58, 0.86);
-        --panel-strong: rgba(9, 34, 78, 0.92);
-        --ink: #ebf1ff;
-        --muted: #aab8d8;
-        --brand: #ff8a00;
-        --brand-2: #ff4e00;
-        --line: rgba(121, 164, 255, 0.36);
-        --ok: #4fd6ff;
+        --bg: #f5f7ff;
+        --bg-2: #eef2ff;
+        --panel: rgba(255, 255, 255, 0.82);
+        --panel-strong: rgba(244, 248, 255, 0.92);
+        --ink: #151e35;
+        --muted: #5d6785;
+        --brand: #4f46e5;
+        --brand-2: #06b6d4;
+        --line: rgba(125, 145, 205, 0.28);
+        --ok: #0284c7;
         --danger: #b91c1c;
-        --shadow: 0 12px 34px rgba(0, 0, 0, 0.34);
+        --shadow: 0 14px 35px rgba(49, 67, 126, 0.12);
       }
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; }
@@ -30,14 +30,13 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         font-family: "Sora", "Avenir Next", "Segoe UI", sans-serif;
         color: var(--ink);
         background:
-          radial-gradient(900px 500px at 0% -10%, rgba(23, 106, 255, 0.3) 0%, transparent 52%),
-          radial-gradient(850px 420px at 100% -5%, rgba(255, 138, 0, 0.24) 0%, transparent 46%),
-          radial-gradient(700px 300px at 50% 120%, rgba(0, 145, 255, 0.18) 0%, transparent 56%),
-          repeating-radial-gradient(circle at 20% 20%, rgba(255,255,255,0.09) 0 1px, transparent 1px 26px),
+          radial-gradient(900px 500px at 0% -10%, rgba(79, 70, 229, 0.18) 0%, transparent 52%),
+          radial-gradient(850px 420px at 100% -5%, rgba(6, 182, 212, 0.16) 0%, transparent 46%),
+          radial-gradient(700px 300px at 50% 120%, rgba(99, 102, 241, 0.14) 0%, transparent 56%),
           linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
         min-height: 100vh;
       }
-      a { color: #67c5ff; text-decoration: none; }
+      a { color: #4338ca; text-decoration: none; }
       a:hover { text-decoration: underline; }
 
       header {
@@ -45,8 +44,8 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         top: 0;
         z-index: 20;
         backdrop-filter: blur(10px);
-        background: rgba(3, 12, 29, 0.8);
-        border-bottom: 1px solid rgba(95, 137, 255, 0.3);
+        background: rgba(255, 255, 255, 0.78);
+        border-bottom: 1px solid rgba(111, 127, 187, 0.24);
       }
       .bar {
         max-width: 1160px;
@@ -70,7 +69,7 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         height: 11px;
         border-radius: 999px;
         background: linear-gradient(135deg, var(--brand), var(--brand-2));
-        box-shadow: 0 0 0 4px rgba(0, 159, 114, 0.12);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
       }
       nav { display: flex; flex-wrap: wrap; gap: 6px; }
       nav a {
@@ -78,11 +77,11 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         align-items: center;
         padding: 8px 10px;
         border-radius: 10px;
-        color: #b4c7ef;
+        color: #4d5a7f;
         font-size: 0.9rem;
       }
-      nav a:hover { text-decoration: none; background: rgba(70, 127, 255, 0.2); }
-      nav a strong { color: #fff; }
+      nav a:hover { text-decoration: none; background: rgba(99, 102, 241, 0.12); }
+      nav a strong { color: #1c2550; }
 
       main { max-width: 1160px; margin: 0 auto; padding: 28px 18px 60px; }
       .hero {
@@ -90,18 +89,16 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         padding: 20px;
         border: 1px solid var(--line);
         border-radius: 20px;
-        background: linear-gradient(140deg, rgba(9, 40, 93, 0.86), rgba(7, 22, 56, 0.9));
+        background: linear-gradient(140deg, rgba(255, 255, 255, 0.9), rgba(240, 246, 255, 0.9));
         box-shadow: var(--shadow);
       }
       .hero h1 {
         margin: 0 0 8px;
         font-size: clamp(1.7rem, 4vw, 2.5rem);
         line-height: 1.05;
-        text-transform: uppercase;
-        letter-spacing: 0.02em;
-        text-shadow: 0 2px 14px rgba(62, 132, 255, 0.35);
+        letter-spacing: -0.02em;
       }
-      .hero p { margin: 0; color: #d0dbf7; }
+      .hero p { margin: 0; color: #5f6782; }
 
       .grid { display: grid; gap: 14px; }
       .two { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
@@ -113,7 +110,7 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         border-radius: 16px;
         padding: 15px;
         box-shadow: var(--shadow);
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(10px);
       }
       .card.accent { background: var(--panel-strong); }
       .card h2, .card h3 { margin: 0 0 10px; letter-spacing: -0.01em; }
@@ -122,9 +119,9 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
 
       .pill {
         display: inline-block;
-        border: 1px solid rgba(116, 163, 255, 0.5);
-        background: rgba(28, 52, 102, 0.6);
-        color: #e2ecff;
+        border: 1px solid rgba(129, 146, 212, 0.45);
+        background: rgba(243, 247, 255, 0.9);
+        color: #37456d;
         border-radius: 999px;
         padding: 4px 10px;
         font-size: 0.74rem;
@@ -135,7 +132,7 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         border: 0;
         border-radius: 11px;
         background: linear-gradient(135deg, var(--brand), var(--brand-2));
-        color: #fff8ee;
+        color: #f8f9ff;
         padding: 10px 14px;
         font: inherit;
         font-weight: 700;
@@ -144,27 +141,27 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
       }
       .cta { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
       .cta:hover, button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14); text-decoration: none; }
-      button.secondary { background: rgba(89, 116, 179, 0.45); color: #eef3ff; border: 1px solid rgba(132, 167, 244, 0.45); }
+      button.secondary { background: rgba(227, 234, 255, 0.85); color: #2f3c66; border: 1px solid rgba(145, 159, 214, 0.4); }
 
       .row { display: grid; gap: 6px; margin-bottom: 10px; }
-      label { color: #cfdbfb; font-size: 0.9rem; }
+      label { color: #4f5f85; font-size: 0.9rem; }
       input, textarea {
         width: 100%;
-        border: 1px solid rgba(128, 163, 240, 0.5);
+        border: 1px solid rgba(137, 153, 209, 0.45);
         border-radius: 10px;
         padding: 10px 11px;
         font: inherit;
-        background: rgba(7, 20, 50, 0.86);
-        color: #eef4ff;
+        background: rgba(255, 255, 255, 0.9);
+        color: #1a2647;
       }
       textarea { min-height: 110px; resize: vertical; }
       pre {
         margin: 0;
         padding: 11px;
         border-radius: 10px;
-        border: 1px solid rgba(128, 163, 240, 0.38);
-        background: rgba(5, 16, 40, 0.9);
-        color: #dfeaff;
+        border: 1px solid rgba(142, 157, 214, 0.35);
+        background: rgba(248, 251, 255, 0.94);
+        color: #203058;
         font-family: "IBM Plex Mono", monospace;
         font-size: 0.8rem;
         white-space: pre-wrap;
@@ -181,7 +178,7 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
 
       footer {
         margin-top: 20px;
-        color: #9eb3da;
+        color: #5f6f95;
         font-size: .82rem;
       }
       .mono { font-family: "IBM Plex Mono", monospace; }
@@ -266,16 +263,16 @@ export function renderFrontend(pathname, apiOrigin) {
       apiOrigin,
       body: `
       <section class="hero reveal">
-        <h1>PREMIUM WEB HOSTING<br/>FOR SOUTH AFRICA</h1>
-        <p>Fast, secure and affordable hosting solutions built for founders, agencies, and growing brands.</p>
+        <h1>Build and ship hosting products at startup speed</h1>
+        <p>A polished platform for South African teams with integrated deploy, billing, support, and admin workflows.</p>
         <p>
           <span class="pill">99.9% Uptime</span>
           <span class="pill">24/7 Support</span>
           <span class="pill">Free SSL</span>
         </p>
         <div class="row" style="margin-top:12px;grid-template-columns:1fr auto;">
-          <input placeholder="Enter your domain name..." />
-          <a class="cta" href="/portal/register">Search</a>
+          <input placeholder="Enter your domain name" />
+          <a class="cta" href="/portal/register">Get Started</a>
         </div>
       </section>
       <section class="grid two">

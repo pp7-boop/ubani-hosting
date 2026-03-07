@@ -5,6 +5,18 @@ import { renderFrontend } from "./frontend.js";
 const DEFAULT_PASSWORD_HASH_ITERATIONS = 15000;
 const MIN_PASSWORD_HASH_ITERATIONS = 10000;
 const MAX_PASSWORD_HASH_ITERATIONS = 50000;
+const RATE_LIMIT_BUCKETS = new Map();
+const BLOCKED_CRAWLER_SIGNATURES = [
+  "gptbot",
+  "chatgpt-user",
+  "oai-searchbot",
+  "claudebot",
+  "anthropic-ai",
+  "perplexitybot",
+  "bytespider",
+  "cohere-ai",
+  "ccbot"
+];
 const SECURITY_HEADERS = {
   "x-content-type-options": "nosniff",
   "x-frame-options": "DENY",
@@ -33,6 +45,17 @@ function html(content, init = {}) {
       "cache-control": "public, max-age=120",
       ...SECURITY_HEADERS,
       "content-security-policy": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; connect-src 'self' https://api.ubanihosting.co.za; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+      ...(init.headers || {})
+    }
+  });
+}
+
+function text(content, init = {}) {
+  return new Response(content, {
+    ...init,
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      ...SECURITY_HEADERS,
       ...(init.headers || {})
     }
   });
@@ -77,6 +100,80 @@ async function parseJson(request) {
 
 function isValidEmail(value) {
   return typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function getClientIp(request) {
+  const fromCf = request.headers.get("cf-connecting-ip");
+  if (fromCf) return fromCf.trim();
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return "unknown";
+}
+
+function consumeRateLimit(key, limit, windowMs) {
+  const now = Date.now();
+  const existing = RATE_LIMIT_BUCKETS.get(key);
+  if (!existing || now >= existing.resetAt) {
+    RATE_LIMIT_BUCKETS.set(key, { count: 1, resetAt: now + windowMs });
+    return { allowed: true, remaining: limit - 1, retryAfterSeconds: Math.ceil(windowMs / 1000) };
+  }
+  existing.count += 1;
+  if (existing.count <= limit) {
+    return {
+      allowed: true,
+      remaining: Math.max(limit - existing.count, 0),
+      retryAfterSeconds: Math.ceil((existing.resetAt - now) / 1000)
+    };
+  }
+  return {
+    allowed: false,
+    remaining: 0,
+    retryAfterSeconds: Math.max(Math.ceil((existing.resetAt - now) / 1000), 1)
+  };
+}
+
+function isBlockedCrawlerRequest(request, env) {
+  if (String(env.ALLOW_AI_CRAWLERS || "").toLowerCase() === "true") return false;
+  const ua = String(request.headers.get("user-agent") || "").toLowerCase();
+  if (!ua) return false;
+  return BLOCKED_CRAWLER_SIGNATURES.some((signature) => ua.includes(signature));
+}
+
+function isFrontendPath(pathname) {
+  return (
+    pathname === "/" ||
+    pathname === "/pricing" ||
+    pathname === "/hosting" ||
+    pathname === "/contact" ||
+    pathname === "/portal" ||
+    pathname.startsWith("/portal/") ||
+    pathname.startsWith("/admin/")
+  );
+}
+
+function getRobotsTxt() {
+  return [
+    "User-agent: GPTBot",
+    "Disallow: /",
+    "",
+    "User-agent: ChatGPT-User",
+    "Disallow: /",
+    "",
+    "User-agent: OAI-SearchBot",
+    "Disallow: /",
+    "",
+    "User-agent: ClaudeBot",
+    "Disallow: /",
+    "",
+    "User-agent: PerplexityBot",
+    "Disallow: /",
+    "",
+    "User-agent: *",
+    "Allow: /",
+    "Disallow: /api/",
+    "Disallow: /admin/",
+    "Disallow: /portal/"
+  ].join("\n");
 }
 
 async function register(request, env) {
@@ -519,8 +616,17 @@ async function yocoWebhook(request, env, rawBody) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const clientIp = getClientIp(request);
 
     try {
+      if (request.method === "GET" && url.pathname === "/robots.txt") {
+        return text(getRobotsTxt(), { headers: { "cache-control": "public, max-age=1800" } });
+      }
+
+      if (request.method === "GET" && isFrontendPath(url.pathname) && isBlockedCrawlerRequest(request, env)) {
+        return text("Forbidden", { status: 403, headers: { "cache-control": "no-store" } });
+      }
+
       if (request.method === "GET" && url.pathname === "/") {
         return html(renderFrontend(url.pathname, getCanonicalApiOrigin(request, env)));
       }
@@ -534,10 +640,20 @@ export default {
         return new Response(null, { status: 204 });
       }
 
-      if (request.method === "POST" && url.pathname === "/api/register") return await register(request, env);
-      if (request.method === "POST" && url.pathname === "/api/login") return await login(request, env);
+      if (request.method === "POST" && url.pathname === "/api/register") {
+        const rl = consumeRateLimit(`register:${clientIp}`, 20, 10 * 60 * 1000);
+        if (!rl.allowed) return json({ error: "Too many registration attempts" }, { status: 429, headers: { "retry-after": String(rl.retryAfterSeconds) } });
+        return await register(request, env);
+      }
+      if (request.method === "POST" && url.pathname === "/api/login") {
+        const rl = consumeRateLimit(`login:${clientIp}`, 30, 10 * 60 * 1000);
+        if (!rl.allowed) return json({ error: "Too many login attempts" }, { status: 429, headers: { "retry-after": String(rl.retryAfterSeconds) } });
+        return await login(request, env);
+      }
       if (request.method === "GET" && url.pathname === "/api") return json({ message: "Ubani API", health: "/health" });
       if (request.method === "POST" && url.pathname === "/webhooks/yoco") {
+        const rl = consumeRateLimit(`webhook:${clientIp}`, 180, 60 * 1000);
+        if (!rl.allowed) return json({ error: "Too many webhook requests" }, { status: 429, headers: { "retry-after": String(rl.retryAfterSeconds) } });
         const rawBody = await request.text();
         return await yocoWebhook(request, env, rawBody);
       }
