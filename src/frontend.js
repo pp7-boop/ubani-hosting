@@ -198,6 +198,19 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
       </div>
     </header>
     <main>${body}<footer>API Origin: <span class="mono">${apiOrigin}</span></footer></main>
+    <script>
+      window.__UBANI_ORIGIN = ${JSON.stringify(apiOrigin)};
+      (function () {
+        const APP_ORIGIN = window.__UBANI_ORIGIN || window.location.origin;
+        document.addEventListener("click", (event) => {
+          const link = event.target && event.target.closest ? event.target.closest("a[href^='/']") : null;
+          if (!link) return;
+          if (window.location.origin === APP_ORIGIN) return;
+          event.preventDefault();
+          window.location.href = APP_ORIGIN + link.getAttribute("href");
+        });
+      })();
+    </script>
     ${script ? `<script>${script}</script>` : ""}
   </body>
 </html>`;
@@ -237,12 +250,14 @@ function adminNav() {
 
 const portalScript = `
 const tokenKey = "ubani_portal_token";
+const APP_ORIGIN = window.__UBANI_ORIGIN || window.location.origin;
 const readToken = () => localStorage.getItem(tokenKey) || "";
 const writeToken = (value) => value ? localStorage.setItem(tokenKey, value) : localStorage.removeItem(tokenKey);
 const api = async (path, options = {}, auth = false) => {
+  const target = path.startsWith("http") ? path : (APP_ORIGIN + path);
   const headers = { "content-type": "application/json", ...(options.headers || {}) };
   if (auth && readToken()) headers.authorization = "Bearer " + readToken();
-  const response = await fetch(path, { ...options, headers });
+  const response = await fetch(target, { ...options, headers });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
   return data;
@@ -410,7 +425,7 @@ document.getElementById("loginBtn").onclick = async () => {
     const data = await api("/api/login", { method: "POST", body: JSON.stringify({ email, password }) });
     writeToken(data.token);
     setStatus("loginStatus", "Success. Redirecting...");
-    setTimeout(() => location.href = "/portal/dashboard", 400);
+    setTimeout(() => location.href = APP_ORIGIN + "/portal/dashboard", 400);
   } catch (error) { setStatus("loginStatus", error.message, true); }
 };`
     });
@@ -440,7 +455,7 @@ document.getElementById("registerBtn").onclick = async () => {
     const data = await api("/api/register", { method: "POST", body: JSON.stringify({ email, password }) });
     writeToken(data.token);
     setStatus("registerStatus", "Success. Redirecting...");
-    setTimeout(() => location.href = "/portal/dashboard", 400);
+    setTimeout(() => location.href = APP_ORIGIN + "/portal/dashboard", 400);
   } catch (error) { setStatus("registerStatus", error.message, true); }
 };`
     });
