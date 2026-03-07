@@ -1,6 +1,6 @@
 # ubani-hosting
 
-Ubani Hosting API scaffold using Cloudflare Workers + Turso (`libsql`) for persistent data and deployment file storage.
+Ubani Hosting API scaffold using Cloudflare Workers + Turso (`libsql`) for persistent data, deployment file storage, and Yoco checkout billing.
 
 ## Security improvements
 
@@ -11,14 +11,17 @@ Ubani Hosting API scaffold using Cloudflare Workers + Turso (`libsql`) for persi
 ## Endpoints
 
 Public:
-- `POST /api/register`
-- `POST /api/login`
+- `GET /`
 - `GET /health`
 - `GET /portal`
+- `POST /api/register`
+- `POST /api/login`
+- `POST /webhooks/yoco`
 
 Protected (`Authorization: Bearer <token>`):
 - `POST /api/deploy`
 - `POST /api/invoice`
+- `POST /api/invoice/checkout`
 - `GET /api/me`
 - `GET /api/projects`
 - `GET /api/invoices`
@@ -42,6 +45,10 @@ cp .dev.vars.example .dev.vars
 - `TURSO_AUTH_TOKEN`
 - `JWT_SECRET`
 - `PASSWORD_HASH_ITERATIONS` (default `15000`, allowed range `10000-50000`)
+- `YOCO_SECRET_KEY`
+- `YOCO_WEBHOOK_SECRET`
+- `PAYMENT_SUCCESS_URL`
+- `PAYMENT_CANCEL_URL`
 
 4. Run DB migrations against Turso:
 
@@ -65,37 +72,26 @@ Set production secrets and deploy Worker:
 wrangler secret put TURSO_DATABASE_URL
 wrangler secret put TURSO_AUTH_TOKEN
 wrangler secret put JWT_SECRET
+wrangler secret put PASSWORD_HASH_ITERATIONS
+wrangler secret put YOCO_SECRET_KEY
+wrangler secret put YOCO_WEBHOOK_SECRET
+wrangler secret put PAYMENT_SUCCESS_URL
+wrangler secret put PAYMENT_CANCEL_URL
 npm run deploy
 ```
 
-## Example auth flow
+## Billing flow
 
-Register:
+1. Client calls `POST /api/invoice/checkout` with `amount` (in cents).
+2. Worker creates invoice and Yoco checkout.
+3. Worker stores payment metadata in `payments`.
+4. Yoco webhook calls `POST /webhooks/yoco`.
+5. Worker updates invoice/payment status (`paid`, `failed`, `pending`).
 
-```json
-{
-  "email": "owner@company.co.za",
-  "password": "StrongPassword123"
-}
-```
+## Portal
 
-Login response contains `token`. Use it for protected routes:
+Open:
 
-```http
-Authorization: Bearer <token>
-```
+- `https://ubani-hosting-api.ubani-hosting.workers.dev/portal`
 
-## Example deploy payload (protected)
-
-```json
-{
-  "domain": "example.co.za",
-  "files": [
-    {
-      "name": "index.html",
-      "contentType": "text/html",
-      "content": "<h1>Hello Ubani</h1>"
-    }
-  ]
-}
-```
+Portal supports register/login, deploying files, creating Yoco checkout sessions, and viewing projects/invoices.

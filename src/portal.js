@@ -130,6 +130,15 @@ export function renderPortal() {
         </article>
 
         <article class="card">
+          <h3>Billing</h3>
+          <div class="row"><label>Amount (cents)</label><input id="checkoutAmount" value="9900" /></div>
+          <button id="checkoutBtn">Create Yoco Checkout</button>
+          <div id="checkoutStatus" class="status"></div>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="card">
           <h3>Account</h3>
           <div id="meCard" class="meta">Sign in to load account data.</div>
           <button id="refreshBtn" class="secondary">Refresh Data</button>
@@ -238,6 +247,26 @@ export function renderPortal() {
           await refreshData();
         } catch (error) {
           setStatus("deployStatus", error.message, true);
+        }
+      };
+
+      document.getElementById("checkoutBtn").onclick = async () => {
+        try {
+          setStatus("checkoutStatus", "Creating checkout...");
+          const amount = Number(document.getElementById("checkoutAmount").value.trim());
+          const result = await api("/api/invoice/checkout", {
+            method: "POST",
+            body: JSON.stringify({ amount })
+          }, true);
+          if (result.checkoutUrl) {
+            setStatus("checkoutStatus", "Checkout created. Opening Yoco...");
+            window.open(result.checkoutUrl, "_blank", "noopener,noreferrer");
+          } else {
+            setStatus("checkoutStatus", "Checkout created, but no checkoutUrl returned.", true);
+          }
+          await refreshData();
+        } catch (error) {
+          setStatus("checkoutStatus", error.message, true);
         }
       };
 

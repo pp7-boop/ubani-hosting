@@ -157,6 +157,90 @@ async function invoice(request, env, userId) {
   return json({ id, status: "pending" }, { status: 201 });
 }
 
+function getYocoSecret(env) {
+  const key = env.YOCO_SECRET_KEY || env.YOCO_SECRET;
+  if (!key) throw new Error("Missing YOCO_SECRET_KEY");
+  return key;
+}
+
+async function createYocoCheckout(amount, invoiceId, request, env) {
+  const secret = getYocoSecret(env);
+  const origin = new URL(request.url).origin;
+  const successUrl = env.PAYMENT_SUCCESS_URL || `${origin}/portal`;
+  const cancelUrl = env.PAYMENT_CANCEL_URL || `${origin}/portal`;
+
+  const response = await fetch("https://payments.yoco.com/api/checkouts", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${secret}`,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      amount,
+      currency: "ZAR",
+      successUrl,
+      cancelUrl,
+      metadata: {
+        invoiceId
+      }
+    })
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = typeof data?.message === "string" ? data.message : `Yoco checkout failed (${response.status})`;
+    throw new Error(message);
+  }
+
+  return {
+    checkoutId: data?.id || data?.checkoutId || crypto.randomUUID(),
+    checkoutUrl: data?.redirectUrl || data?.url || data?.checkoutUrl || null,
+    raw: data
+  };
+}
+
+async function createInvoiceCheckout(request, env, userId) {
+  const body = await parseJson(request);
+  if (!Number.isInteger(body?.amount) || body.amount <= 0) {
+    return json({ error: "amount must be a positive integer in cents" }, { status: 400 });
+  }
+
+  const db = getTursoClient(env);
+  const invoiceId = crypto.randomUUID();
+
+  await db.execute({
+    sql: `INSERT INTO invoices(id, user_id, amount, status)
+          VALUES (?, ?, ?, ?)`,
+    args: [invoiceId, userId, body.amount, "pending"]
+  });
+
+  const checkout = await createYocoCheckout(body.amount, invoiceId, request, env);
+
+  await db.execute({
+    sql: `INSERT INTO payments(
+            id, invoice_id, user_id, provider, status, checkout_id, checkout_url, provider_reference, payload, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    args: [
+      crypto.randomUUID(),
+      invoiceId,
+      userId,
+      "yoco",
+      "pending",
+      checkout.checkoutId,
+      checkout.checkoutUrl,
+      null,
+      JSON.stringify(checkout.raw)
+    ]
+  });
+
+  return json({
+    invoiceId,
+    amount: body.amount,
+    status: "pending",
+    checkoutUrl: checkout.checkoutUrl
+  }, { status: 201 });
+}
+
 async function me(env, userId) {
   const db = getTursoClient(env);
   const result = await db.execute({
@@ -194,6 +278,57 @@ async function listInvoices(env, userId) {
   return json({ invoices: result.rows });
 }
 
+function normalizePaymentStatus(value) {
+  const status = String(value || "").toLowerCase();
+  if (status === "successful" || status === "paid" || status === "completed") return "paid";
+  if (status === "failed" || status === "cancelled" || status === "canceled") return "failed";
+  return "pending";
+}
+
+async function yocoWebhook(request, env) {
+  const webhookSecret = env.YOCO_WEBHOOK_SECRET;
+  if (webhookSecret) {
+    const provided = request.headers.get("x-ubani-webhook-secret") || "";
+    if (provided !== webhookSecret) {
+      return json({ error: "Unauthorized webhook" }, { status: 401 });
+    }
+  }
+
+  const payload = await parseJson(request);
+  if (!payload) return json({ error: "Invalid JSON body" }, { status: 400 });
+
+  const invoiceId =
+    payload?.metadata?.invoiceId ||
+    payload?.invoiceId ||
+    payload?.reference ||
+    payload?.checkoutId ||
+    null;
+
+  if (!invoiceId || typeof invoiceId !== "string") {
+    return json({ error: "Missing invoice reference in webhook payload" }, { status: 400 });
+  }
+
+  const status = normalizePaymentStatus(payload?.status || payload?.eventType);
+  const providerRef = String(payload?.id || payload?.paymentId || payload?.checkoutId || "");
+  const db = getTursoClient(env);
+
+  await db.execute({
+    sql: `UPDATE invoices
+          SET status = ?
+          WHERE id = ?`,
+    args: [status, invoiceId]
+  });
+
+  await db.execute({
+    sql: `UPDATE payments
+          SET status = ?, provider_reference = ?, payload = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE invoice_id = ?`,
+    args: [status, providerRef, JSON.stringify(payload), invoiceId]
+  });
+
+  return json({ ok: true, invoiceId, status });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -213,6 +348,7 @@ export default {
 
       if (request.method === "POST" && url.pathname === "/api/register") return await register(request, env);
       if (request.method === "POST" && url.pathname === "/api/login") return await login(request, env);
+      if (request.method === "POST" && url.pathname === "/webhooks/yoco") return await yocoWebhook(request, env);
 
       if (request.method === "GET" && url.pathname === "/health") return json({ ok: true });
 
@@ -223,6 +359,7 @@ export default {
 
       if (request.method === "POST" && url.pathname === "/api/deploy") return await deploy(request, env, authUserId);
       if (request.method === "POST" && url.pathname === "/api/invoice") return await invoice(request, env, authUserId);
+      if (request.method === "POST" && url.pathname === "/api/invoice/checkout") return await createInvoiceCheckout(request, env, authUserId);
       if (request.method === "GET" && url.pathname === "/api/me") return await me(env, authUserId);
       if (request.method === "GET" && url.pathname === "/api/projects") return await listProjects(env, authUserId);
       if (request.method === "GET" && url.pathname === "/api/invoices") return await listInvoices(env, authUserId);
