@@ -14,11 +14,14 @@ Public:
 - `POST /api/register`
 - `POST /api/login`
 - `GET /health`
+- `GET /portal`
 
 Protected (`Authorization: Bearer <token>`):
 - `POST /api/deploy`
 - `POST /api/invoice`
 - `GET /api/me`
+- `GET /api/projects`
+- `GET /api/invoices`
 
 ## Local setup
 

@@ -1,5 +1,6 @@
 import { getTursoClient } from "./lib/turso.js";
 import { getAuthUserId, hashPassword, signJwt, verifyPassword } from "./lib/auth.js";
+import { renderPortal } from "./portal.js";
 
 const DEFAULT_PASSWORD_HASH_ITERATIONS = 15000;
 const MIN_PASSWORD_HASH_ITERATIONS = 10000;
@@ -10,6 +11,16 @@ function json(data, init = {}) {
     ...init,
     headers: {
       "content-type": "application/json; charset=utf-8",
+      ...(init.headers || {})
+    }
+  });
+}
+
+function html(content, init = {}) {
+  return new Response(content, {
+    ...init,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
       ...(init.headers || {})
     }
   });
@@ -157,6 +168,32 @@ async function me(env, userId) {
   return json({ user: result.rows[0] });
 }
 
+async function listProjects(env, userId) {
+  const db = getTursoClient(env);
+  const result = await db.execute({
+    sql: `SELECT id, domain, storage, created_at
+          FROM projects
+          WHERE user_id = ?
+          ORDER BY created_at DESC
+          LIMIT 100`,
+    args: [userId]
+  });
+  return json({ projects: result.rows });
+}
+
+async function listInvoices(env, userId) {
+  const db = getTursoClient(env);
+  const result = await db.execute({
+    sql: `SELECT id, amount, status, created_at
+          FROM invoices
+          WHERE user_id = ?
+          ORDER BY created_at DESC
+          LIMIT 100`,
+    args: [userId]
+  });
+  return json({ invoices: result.rows });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -164,6 +201,10 @@ export default {
     try {
       if (request.method === "GET" && url.pathname === "/") {
         return json({ message: "Ubani API", health: "/health" });
+      }
+
+      if (request.method === "GET" && url.pathname === "/portal") {
+        return html(renderPortal());
       }
 
       if (request.method === "GET" && url.pathname === "/favicon.ico") {
@@ -183,6 +224,8 @@ export default {
       if (request.method === "POST" && url.pathname === "/api/deploy") return await deploy(request, env, authUserId);
       if (request.method === "POST" && url.pathname === "/api/invoice") return await invoice(request, env, authUserId);
       if (request.method === "GET" && url.pathname === "/api/me") return await me(env, authUserId);
+      if (request.method === "GET" && url.pathname === "/api/projects") return await listProjects(env, authUserId);
+      if (request.method === "GET" && url.pathname === "/api/invoices") return await listInvoices(env, authUserId);
 
       return json({ message: "Ubani API" });
     } catch (error) {
