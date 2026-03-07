@@ -11,18 +11,18 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --bg: #fff9f0;
-        --bg-2: #eefbf7;
-        --panel: #ffffff;
-        --panel-strong: #f7fff9;
-        --ink: #142033;
-        --muted: #536075;
-        --brand: #009f72;
-        --brand-2: #ff7a1a;
-        --line: #d7e3db;
-        --ok: #0f766e;
+        --bg: #030a19;
+        --bg-2: #071733;
+        --panel: rgba(8, 24, 58, 0.86);
+        --panel-strong: rgba(9, 34, 78, 0.92);
+        --ink: #ebf1ff;
+        --muted: #aab8d8;
+        --brand: #ff8a00;
+        --brand-2: #ff4e00;
+        --line: rgba(121, 164, 255, 0.36);
+        --ok: #4fd6ff;
         --danger: #b91c1c;
-        --shadow: 0 8px 30px rgba(18, 26, 40, 0.08);
+        --shadow: 0 12px 34px rgba(0, 0, 0, 0.34);
       }
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; }
@@ -30,12 +30,14 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         font-family: "Sora", "Avenir Next", "Segoe UI", sans-serif;
         color: var(--ink);
         background:
-          radial-gradient(900px 500px at 0% -10%, #dbf4e9 0%, transparent 52%),
-          radial-gradient(850px 420px at 100% -5%, #ffe4cc 0%, transparent 46%),
+          radial-gradient(900px 500px at 0% -10%, rgba(23, 106, 255, 0.3) 0%, transparent 52%),
+          radial-gradient(850px 420px at 100% -5%, rgba(255, 138, 0, 0.24) 0%, transparent 46%),
+          radial-gradient(700px 300px at 50% 120%, rgba(0, 145, 255, 0.18) 0%, transparent 56%),
+          repeating-radial-gradient(circle at 20% 20%, rgba(255,255,255,0.09) 0 1px, transparent 1px 26px),
           linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
         min-height: 100vh;
       }
-      a { color: #0c7e5d; text-decoration: none; }
+      a { color: #67c5ff; text-decoration: none; }
       a:hover { text-decoration: underline; }
 
       header {
@@ -43,8 +45,8 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         top: 0;
         z-index: 20;
         backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.78);
-        border-bottom: 1px solid rgba(182, 206, 194, 0.75);
+        background: rgba(3, 12, 29, 0.8);
+        border-bottom: 1px solid rgba(95, 137, 255, 0.3);
       }
       .bar {
         max-width: 1160px;
@@ -76,11 +78,11 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         align-items: center;
         padding: 8px 10px;
         border-radius: 10px;
-        color: #29354d;
+        color: #b4c7ef;
         font-size: 0.9rem;
       }
-      nav a:hover { text-decoration: none; background: rgba(0, 159, 114, 0.1); }
-      nav a strong { color: #0e2038; }
+      nav a:hover { text-decoration: none; background: rgba(70, 127, 255, 0.2); }
+      nav a strong { color: #fff; }
 
       main { max-width: 1160px; margin: 0 auto; padding: 28px 18px 60px; }
       .hero {
@@ -88,11 +90,18 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         padding: 20px;
         border: 1px solid var(--line);
         border-radius: 20px;
-        background: linear-gradient(120deg, rgba(0,159,114,0.1), rgba(255,122,26,0.08));
+        background: linear-gradient(140deg, rgba(9, 40, 93, 0.86), rgba(7, 22, 56, 0.9));
         box-shadow: var(--shadow);
       }
-      .hero h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 4vw, 2.5rem); line-height: 1.05; }
-      .hero p { margin: 0; color: #36435a; }
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: clamp(1.7rem, 4vw, 2.5rem);
+        line-height: 1.05;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        text-shadow: 0 2px 14px rgba(62, 132, 255, 0.35);
+      }
+      .hero p { margin: 0; color: #d0dbf7; }
 
       .grid { display: grid; gap: 14px; }
       .two { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
@@ -104,6 +113,7 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         border-radius: 16px;
         padding: 15px;
         box-shadow: var(--shadow);
+        backdrop-filter: blur(4px);
       }
       .card.accent { background: var(--panel-strong); }
       .card h2, .card h3 { margin: 0 0 10px; letter-spacing: -0.01em; }
@@ -112,9 +122,9 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
 
       .pill {
         display: inline-block;
-        border: 1px solid #b9d8c8;
-        background: #f4fff9;
-        color: #315244;
+        border: 1px solid rgba(116, 163, 255, 0.5);
+        background: rgba(28, 52, 102, 0.6);
+        color: #e2ecff;
         border-radius: 999px;
         padding: 4px 10px;
         font-size: 0.74rem;
@@ -125,7 +135,7 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         border: 0;
         border-radius: 11px;
         background: linear-gradient(135deg, var(--brand), var(--brand-2));
-        color: #fff;
+        color: #fff8ee;
         padding: 10px 14px;
         font: inherit;
         font-weight: 700;
@@ -134,26 +144,27 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
       }
       .cta { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
       .cta:hover, button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14); text-decoration: none; }
-      button.secondary { background: #e5ece9; color: #1f2937; }
+      button.secondary { background: rgba(89, 116, 179, 0.45); color: #eef3ff; border: 1px solid rgba(132, 167, 244, 0.45); }
 
       .row { display: grid; gap: 6px; margin-bottom: 10px; }
-      label { color: #405069; font-size: 0.9rem; }
+      label { color: #cfdbfb; font-size: 0.9rem; }
       input, textarea {
         width: 100%;
-        border: 1px solid #cfe0d8;
+        border: 1px solid rgba(128, 163, 240, 0.5);
         border-radius: 10px;
         padding: 10px 11px;
         font: inherit;
-        background: #fff;
+        background: rgba(7, 20, 50, 0.86);
+        color: #eef4ff;
       }
       textarea { min-height: 110px; resize: vertical; }
       pre {
         margin: 0;
         padding: 11px;
         border-radius: 10px;
-        border: 1px solid #c8d6ce;
-        background: #f7faf8;
-        color: #1f2937;
+        border: 1px solid rgba(128, 163, 240, 0.38);
+        background: rgba(5, 16, 40, 0.9);
+        color: #dfeaff;
         font-family: "IBM Plex Mono", monospace;
         font-size: 0.8rem;
         white-space: pre-wrap;
@@ -170,7 +181,7 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
 
       footer {
         margin-top: 20px;
-        color: #5f6f83;
+        color: #9eb3da;
         font-size: .82rem;
       }
       .mono { font-family: "IBM Plex Mono", monospace; }
@@ -255,28 +266,32 @@ export function renderFrontend(pathname, apiOrigin) {
       apiOrigin,
       body: `
       <section class="hero reveal">
-        <h1>Build, bill, and deploy at startup speed</h1>
-        <p>Production hosting stack for South African founders and agencies, with integrated payments and edge delivery.</p>
+        <h1>PREMIUM WEB HOSTING<br/>FOR SOUTH AFRICA</h1>
+        <p>Fast, secure and affordable hosting solutions built for founders, agencies, and growing brands.</p>
         <p>
-          <span class="pill">Cloudflare Edge</span>
-          <span class="pill">Yoco Checkout</span>
-          <span class="pill">Turso Storage</span>
+          <span class="pill">99.9% Uptime</span>
+          <span class="pill">24/7 Support</span>
+          <span class="pill">Free SSL</span>
         </p>
-        <p><a class="cta" href="/portal/register">Start Free Trial</a></p>
+        <div class="row" style="margin-top:12px;grid-template-columns:1fr auto;">
+          <input placeholder="Enter your domain name..." />
+          <a class="cta" href="/portal/register">Search</a>
+        </div>
       </section>
       <section class="grid two">
         <article class="card reveal" data-delay="1">
-          <h3>Why teams pick Ubani</h3>
+          <h3>Powerful Hosting Stack</h3>
           <ul>
-            <li>Instant account to deployment flow</li>
-            <li>Checkout and invoice APIs ready out of the box</li>
-            <li>Admin visibility for users and revenue</li>
-            <li>Support ticket workflow for fast issue handling</li>
+            <li>Cloudflare edge delivery and caching</li>
+            <li>Billing and payments integrated with Yoco</li>
+            <li>Project deployment with storage tracking</li>
+            <li>Admin visibility for users, invoices and revenue</li>
           </ul>
         </article>
         <article class="card accent reveal" data-delay="2">
-          <h3>Growth Engine Included</h3>
-          <p>Referral loops, conversion-focused pricing, and reusable page architecture to scale from first customers to agency volume.</p>
+          <h3>Get Online Today</h3>
+          <p>Host your first site in minutes, then scale with agency-grade workflows and managed operations.</p>
+          <p style="margin-top:12px;"><a class="cta" href="/portal/register">Get Started Now</a></p>
         </article>
       </section>`
     });
