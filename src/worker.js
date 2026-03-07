@@ -26,6 +26,35 @@ function html(content, init = {}) {
   });
 }
 
+function constantTimeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i += 1) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return mismatch === 0;
+}
+
+function bytesFromBase64(base64) {
+  return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+}
+
+function base64FromBytes(bytes) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+async function hmacSha256Base64(keyBytes, message) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyBytes,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
+  return base64FromBytes(new Uint8Array(signature));
+}
+
 async function parseJson(request) {
   try {
     return await request.json();
@@ -285,17 +314,59 @@ function normalizePaymentStatus(value) {
   return "pending";
 }
 
-async function yocoWebhook(request, env) {
-  const webhookSecret = env.YOCO_WEBHOOK_SECRET;
-  if (webhookSecret) {
-    const provided = request.headers.get("x-ubani-webhook-secret") || "";
-    if (provided !== webhookSecret) {
-      return json({ error: "Unauthorized webhook" }, { status: 401 });
-    }
+async function verifyYocoWebhookSignature(request, rawBody, webhookSecret) {
+  const webhookId = request.headers.get("webhook-id") || "";
+  const webhookTimestamp = request.headers.get("webhook-timestamp") || "";
+  const webhookSignature = request.headers.get("webhook-signature") || "";
+
+  if (!webhookId || !webhookTimestamp || !webhookSignature) return false;
+
+  const timestampSeconds = Number(webhookTimestamp);
+  if (!Number.isFinite(timestampSeconds)) return false;
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  if (Math.abs(nowSeconds - timestampSeconds) > 180) return false;
+
+  const [prefix, ...parts] = webhookSecret.split("_");
+  if (!prefix || parts.length === 0) return false;
+
+  let secretBytes;
+  try {
+    secretBytes = bytesFromBase64(parts.join("_"));
+  } catch {
+    return false;
   }
 
-  const payload = await parseJson(request);
-  if (!payload) return json({ error: "Invalid JSON body" }, { status: 400 });
+  const signedContent = `${webhookId}.${webhookTimestamp}.${rawBody}`;
+  const expectedSignature = await hmacSha256Base64(secretBytes, signedContent);
+
+  const signatures = webhookSignature
+    .split(/\s+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const idx = entry.indexOf(",");
+      if (idx === -1) return null;
+      return { version: entry.slice(0, idx), signature: entry.slice(idx + 1) };
+    })
+    .filter(Boolean);
+
+  return signatures.some((entry) => entry.version === "v1" && constantTimeEqual(entry.signature, expectedSignature));
+}
+
+async function yocoWebhook(request, env, rawBody) {
+  const webhookSecret = env.YOCO_WEBHOOK_SECRET || "";
+  if (webhookSecret) {
+    const verified = await verifyYocoWebhookSignature(request, rawBody, webhookSecret);
+    if (!verified) return json({ error: "Invalid Yoco webhook signature" }, { status: 401 });
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
   const invoiceId =
     payload?.metadata?.invoiceId ||
@@ -348,7 +419,10 @@ export default {
 
       if (request.method === "POST" && url.pathname === "/api/register") return await register(request, env);
       if (request.method === "POST" && url.pathname === "/api/login") return await login(request, env);
-      if (request.method === "POST" && url.pathname === "/webhooks/yoco") return await yocoWebhook(request, env);
+      if (request.method === "POST" && url.pathname === "/webhooks/yoco") {
+        const rawBody = await request.text();
+        return await yocoWebhook(request, env, rawBody);
+      }
 
       if (request.method === "GET" && url.pathname === "/health") return json({ ok: true });
 

@@ -1,4 +1,4 @@
-oauth_token = "6ORmU3m45hzCxrIMpmonYlz5SOXjN0fYuEUtIWrrCRA._2sxkFWx0rNyrDEgomrQpxMr-D27qj2FTAv4dsSCa7c"
-expiration_time = "2026-03-07T09:44:52.458Z"
-refresh_token = "rXUtlGOrUAQoOpVIjxqk6YkiBugqDJvUrnPRlafEJks.KUoD_26iCHHJHEkS2vHAxgcQH7kxQ0DteWbtvkcFGNA"
+oauth_token = "AO8hA272r2K5o5iCA-I4ieQhQ5a6mFzOJBX1G7YPqsQ.gIpXGlI-foAWVsHA3HZNz0UtX5k7yIPYwKr9dv-jJeY"
+expiration_time = "2026-03-07T12:16:50.610Z"
+refresh_token = "QCcUB_V5OF-F1VWMqEUcR3WHRqci7IusEBunafStGc0.9dY1NoRsdwPTcQWQGKKWuShonHTcOw-Jr3_5SYMvRqM"
 scopes = [ "account:read", "user:read", "workers:write", "workers_kv:write", "workers_routes:write", "workers_scripts:write", "workers_tail:read", "d1:write", "pages:write", "zone:read", "ssl_certs:write", "ai:write", "ai-search:write", "ai-search:run", "queues:write", "pipelines:write", "secrets_store:write", "containers:write", "cloudchamber:write", "connectivity:admin", "offline_access" ]

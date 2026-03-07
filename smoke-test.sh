@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="https://ubani-hosting-api.ubani-hosting.workers.dev"
+BASE_URL="${BASE_URL:-https://ubani-hosting-api.ubani-hosting.workers.dev}"
 EMAIL="smoke-$(date +%s)@example.com"
 PASSWORD="StrongPass123!"
 DOMAIN="smoke-$(date +%s).co.za"
