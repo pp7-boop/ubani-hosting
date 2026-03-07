@@ -5,12 +5,21 @@ import { renderFrontend } from "./frontend.js";
 const DEFAULT_PASSWORD_HASH_ITERATIONS = 15000;
 const MIN_PASSWORD_HASH_ITERATIONS = 10000;
 const MAX_PASSWORD_HASH_ITERATIONS = 50000;
+const SECURITY_HEADERS = {
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "geolocation=(), camera=(), microphone=()",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+};
 
 function json(data, init = {}) {
   return new Response(JSON.stringify(data), {
     ...init,
     headers: {
       "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      ...SECURITY_HEADERS,
       ...(init.headers || {})
     }
   });
@@ -21,6 +30,9 @@ function html(content, init = {}) {
     ...init,
     headers: {
       "content-type": "text/html; charset=utf-8",
+      "cache-control": "public, max-age=120",
+      ...SECURITY_HEADERS,
+      "content-security-policy": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; connect-src 'self' https://api.ubanihosting.co.za; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
       ...(init.headers || {})
     }
   });

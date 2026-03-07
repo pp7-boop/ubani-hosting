@@ -4,57 +4,192 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Ubani Hosting - High-performance hosting and deployment platform for South Africa." />
     <title>${title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --bg: #f3f5f8;
+        --bg: #fff9f0;
+        --bg-2: #eefbf7;
         --panel: #ffffff;
-        --ink: #0f172a;
-        --muted: #4b5563;
-        --brand: #0ea5e9;
-        --brand-2: #16a34a;
-        --line: #d1d5db;
+        --panel-strong: #f7fff9;
+        --ink: #142033;
+        --muted: #536075;
+        --brand: #009f72;
+        --brand-2: #ff7a1a;
+        --line: #d7e3db;
+        --ok: #0f766e;
+        --danger: #b91c1c;
+        --shadow: 0 8px 30px rgba(18, 26, 40, 0.08);
       }
       * { box-sizing: border-box; }
-      body { margin: 0; font-family: "Segoe UI", Tahoma, sans-serif; color: var(--ink); background: linear-gradient(180deg, #e2e8f0 0, #f8fafc 280px, var(--bg) 100%); }
-      a { color: #0369a1; text-decoration: none; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: "Sora", "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(900px 500px at 0% -10%, #dbf4e9 0%, transparent 52%),
+          radial-gradient(850px 420px at 100% -5%, #ffe4cc 0%, transparent 46%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+        min-height: 100vh;
+      }
+      a { color: #0c7e5d; text-decoration: none; }
       a:hover { text-decoration: underline; }
-      header { background: #0b1220; color: #e2e8f0; border-bottom: 3px solid #0ea5e9; }
-      .bar { max-width: 1080px; margin: 0 auto; padding: 14px 18px; display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-      .brand { font-weight: 800; letter-spacing: .02em; }
-      nav { display: flex; gap: 12px; flex-wrap: wrap; }
-      nav a { color: #cbd5e1; font-size: 0.95rem; }
-      nav a strong { color: #fff; }
-      main { max-width: 1080px; margin: 0 auto; padding: 20px 18px 44px; }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.78);
+        border-bottom: 1px solid rgba(182, 206, 194, 0.75);
+      }
+      .bar {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 14px 18px;
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+      }
+      .brand-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        box-shadow: 0 0 0 4px rgba(0, 159, 114, 0.12);
+      }
+      nav { display: flex; flex-wrap: wrap; gap: 6px; }
+      nav a {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 10px;
+        border-radius: 10px;
+        color: #29354d;
+        font-size: 0.9rem;
+      }
+      nav a:hover { text-decoration: none; background: rgba(0, 159, 114, 0.1); }
+      nav a strong { color: #0e2038; }
+
+      main { max-width: 1160px; margin: 0 auto; padding: 28px 18px 60px; }
+      .hero {
+        margin-bottom: 18px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(120deg, rgba(0,159,114,0.1), rgba(255,122,26,0.08));
+        box-shadow: var(--shadow);
+      }
+      .hero h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 4vw, 2.5rem); line-height: 1.05; }
+      .hero p { margin: 0; color: #36435a; }
+
       .grid { display: grid; gap: 14px; }
-      .two { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+      .two { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
       .three { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; box-shadow: 0 2px 10px rgba(2, 6, 23, 0.04); }
-      h1, h2, h3 { margin: 0 0 10px; }
-      p { margin: 0 0 8px; color: var(--muted); line-height: 1.45; }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 15px;
+        box-shadow: var(--shadow);
+      }
+      .card.accent { background: var(--panel-strong); }
+      .card h2, .card h3 { margin: 0 0 10px; letter-spacing: -0.01em; }
+      .card p { margin: 0 0 8px; color: var(--muted); line-height: 1.45; }
+      .card ul { margin: 0; padding-left: 18px; color: var(--muted); }
+
+      .pill {
+        display: inline-block;
+        border: 1px solid #b9d8c8;
+        background: #f4fff9;
+        color: #315244;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 0.74rem;
+        margin-right: 6px;
+        margin-top: 4px;
+      }
+      .cta, button {
+        border: 0;
+        border-radius: 11px;
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        color: #fff;
+        padding: 10px 14px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 180ms ease, box-shadow 180ms ease;
+      }
+      .cta { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+      .cta:hover, button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14); text-decoration: none; }
+      button.secondary { background: #e5ece9; color: #1f2937; }
+
       .row { display: grid; gap: 6px; margin-bottom: 10px; }
-      input, textarea, select, button { font: inherit; }
-      input, textarea, select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; background: #fff; }
+      label { color: #405069; font-size: 0.9rem; }
+      input, textarea {
+        width: 100%;
+        border: 1px solid #cfe0d8;
+        border-radius: 10px;
+        padding: 10px 11px;
+        font: inherit;
+        background: #fff;
+      }
       textarea { min-height: 110px; resize: vertical; }
-      button { border: 0; border-radius: 9px; padding: 10px 14px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff; font-weight: 700; cursor: pointer; }
-      button.secondary { background: #e5e7eb; color: #111827; }
-      .status { min-height: 20px; margin-top: 8px; color: var(--muted); font-size: .92rem; }
-      .status.error { color: #b91c1c; }
-      ul { margin: 0; padding-left: 18px; color: var(--muted); }
-      pre { white-space: pre-wrap; word-break: break-word; margin: 0; background: #0b1220; color: #e2e8f0; border-radius: 8px; padding: 10px; font-size: .85rem; }
-      .cta { display: inline-block; padding: 10px 14px; background: #0ea5e9; color: #fff; border-radius: 9px; font-weight: 700; }
-      .pill { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; font-size: .75rem; color: var(--muted); margin-right: 6px; }
-      footer { margin-top: 20px; font-size: .85rem; color: #6b7280; }
+      pre {
+        margin: 0;
+        padding: 11px;
+        border-radius: 10px;
+        border: 1px solid #c8d6ce;
+        background: #f7faf8;
+        color: #1f2937;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.8rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .status { min-height: 20px; margin-top: 8px; color: var(--ok); font-size: .92rem; }
+      .status.error { color: var(--danger); }
+
+      .reveal { opacity: 0; transform: translateY(14px); animation: rise 500ms ease forwards; }
+      .reveal[data-delay="1"] { animation-delay: 80ms; }
+      .reveal[data-delay="2"] { animation-delay: 140ms; }
+      .reveal[data-delay="3"] { animation-delay: 200ms; }
+      @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+      footer {
+        margin-top: 20px;
+        color: #5f6f83;
+        font-size: .82rem;
+      }
+      .mono { font-family: "IBM Plex Mono", monospace; }
+
+      @media (max-width: 720px) {
+        .hero { padding: 16px; border-radius: 16px; }
+        .bar { padding: 12px; }
+        main { padding: 18px 12px 44px; }
+      }
     </style>
   </head>
   <body>
     <header>
       <div class="bar">
-        <div class="brand">Ubani Hosting</div>
+        <div class="brand"><span class="brand-dot"></span>Ubani Hosting</div>
         <nav>${nav}</nav>
       </div>
     </header>
-    <main>${body}<footer>API Origin: ${apiOrigin}</footer></main>
+    <main>${body}<footer>API Origin: <span class="mono">${apiOrigin}</span></footer></main>
     ${script ? `<script>${script}</script>` : ""}
   </body>
 </html>`;
@@ -66,7 +201,7 @@ function marketingNav() {
     `<a href="/pricing">Pricing</a>`,
     `<a href="/hosting">Hosting</a>`,
     `<a href="/contact">Contact</a>`,
-    `<a href="/portal/login">Client Portal</a>`,
+    `<a href="/portal/login">Portal</a>`,
     `<a href="/admin/dashboard">Admin</a>`
   ].join("");
 }
@@ -86,7 +221,7 @@ function portalNav() {
 function adminNav() {
   return [
     `<a href="/"><strong>Marketing</strong></a>`,
-    `<a href="/admin/dashboard">Admin Dashboard</a>`,
+    `<a href="/admin/dashboard">Dashboard</a>`,
     `<a href="/admin/users">Users</a>`,
     `<a href="/admin/revenue">Revenue</a>`
   ].join("");
@@ -119,21 +254,29 @@ export function renderFrontend(pathname, apiOrigin) {
       nav: marketingNav(),
       apiOrigin,
       body: `
+      <section class="hero reveal">
+        <h1>Build, bill, and deploy at startup speed</h1>
+        <p>Production hosting stack for South African founders and agencies, with integrated payments and edge delivery.</p>
+        <p>
+          <span class="pill">Cloudflare Edge</span>
+          <span class="pill">Yoco Checkout</span>
+          <span class="pill">Turso Storage</span>
+        </p>
+        <p><a class="cta" href="/portal/register">Start Free Trial</a></p>
+      </section>
       <section class="grid two">
-        <article class="card">
-          <h1>Blazing Fast Hosting For South Africa</h1>
-          <p>Launch websites globally in seconds with local-first support, instant deploys, and built-in billing.</p>
-          <p><span class="pill">Cloudflare Edge</span><span class="pill">Yoco Payments</span><span class="pill">R0 Launch Stack</span></p>
-          <p><a class="cta" href="/portal/register">Start Free</a></p>
-        </article>
-        <article class="card">
-          <h3>First 100 Customers Engine</h3>
+        <article class="card reveal" data-delay="1">
+          <h3>Why teams pick Ubani</h3>
           <ul>
-            <li>Free plan funnel with instant onboarding</li>
-            <li>Agency reseller model with recurring commissions</li>
-            <li>Referral credits for organic growth</li>
-            <li>SEO landing pages for local search demand</li>
+            <li>Instant account to deployment flow</li>
+            <li>Checkout and invoice APIs ready out of the box</li>
+            <li>Admin visibility for users and revenue</li>
+            <li>Support ticket workflow for fast issue handling</li>
           </ul>
+        </article>
+        <article class="card accent reveal" data-delay="2">
+          <h3>Growth Engine Included</h3>
+          <p>Referral loops, conversion-focused pricing, and reusable page architecture to scale from first customers to agency volume.</p>
         </article>
       </section>`
     });
@@ -145,11 +288,11 @@ export function renderFrontend(pathname, apiOrigin) {
       nav: marketingNav(),
       apiOrigin,
       body: `
-      <h1>Pricing</h1>
+      <section class="hero reveal"><h1>Simple pricing, serious performance</h1><p>Start free, then scale to agency-grade operations.</p></section>
       <section class="grid three">
-        <article class="card"><h3>Free</h3><p>R0/mo</p><ul><li>1 site</li><li>500MB storage</li><li>ubani subdomain</li></ul></article>
-        <article class="card"><h3>Starter</h3><p>R99/mo</p><ul><li>5 sites</li><li>10GB storage</li><li>Custom domains</li></ul></article>
-        <article class="card"><h3>Pro Agency</h3><p>R299/mo</p><ul><li>Unlimited clients</li><li>Priority support</li><li>Reseller dashboard</li></ul></article>
+        <article class="card reveal"><h3>Free</h3><p>R0/mo</p><ul><li>1 site</li><li>500MB storage</li><li>ubani subdomain</li></ul></article>
+        <article class="card accent reveal" data-delay="1"><h3>Starter</h3><p>R99/mo</p><ul><li>5 sites</li><li>10GB storage</li><li>Custom domains</li><li>Yoco billing</li></ul></article>
+        <article class="card reveal" data-delay="2"><h3>Agency</h3><p>R299/mo</p><ul><li>Unlimited clients</li><li>Priority support</li><li>Admin + team workflows</li></ul></article>
       </section>`
     });
   }
@@ -160,12 +303,12 @@ export function renderFrontend(pathname, apiOrigin) {
       nav: marketingNav(),
       apiOrigin,
       body: `
-      <h1>Hosting Products</h1>
+      <section class="hero reveal"><h1>Hosting products built for velocity</h1><p>Everything needed to launch client sites quickly and safely.</p></section>
       <section class="grid two">
-        <article class="card"><h3>Static + Jamstack</h3><p>Upload files or deploy from GitHub with global edge delivery.</p></article>
-        <article class="card"><h3>WordPress Quickstart</h3><p>One-click managed WordPress bootstrap for rapid launches.</p></article>
-        <article class="card"><h3>Client Billing</h3><p>Yoco checkout links, invoice tracking, webhook-driven status sync.</p></article>
-        <article class="card"><h3>Support + AI</h3><p>Ticketing with automation-ready API flows for high-volume support.</p></article>
+        <article class="card reveal"><h3>Static + API</h3><p>Upload and deploy with project-level tracking and storage accounting.</p></article>
+        <article class="card reveal" data-delay="1"><h3>Billing-native</h3><p>Invoice checkout creation and webhook-based payment state sync.</p></article>
+        <article class="card reveal" data-delay="2"><h3>Support workflow</h3><p>Native support ticket endpoints for operations and retention.</p></article>
+        <article class="card reveal" data-delay="3"><h3>Admin analytics</h3><p>Live user counts, invoice totals, and paid revenue summaries.</p></article>
       </section>`
     });
   }
@@ -176,18 +319,10 @@ export function renderFrontend(pathname, apiOrigin) {
       nav: marketingNav(),
       apiOrigin,
       body: `
-      <h1>Contact</h1>
+      <section class="hero reveal"><h1>Let’s launch your platform</h1><p>Sales and support channels for founders, dev teams, and agencies.</p></section>
       <section class="grid two">
-        <article class="card">
-          <p>Sales: sales@ubanihosting.co.za</p>
-          <p>Support: support@ubanihosting.co.za</p>
-          <p>Partnerships: partners@ubanihosting.co.za</p>
-        </article>
-        <article class="card">
-          <h3>Need a demo?</h3>
-          <p>Open the client portal and test the full register, billing, and deploy flow instantly.</p>
-          <a class="cta" href="/portal/register">Go To Portal</a>
-        </article>
+        <article class="card reveal"><p>Sales: sales@ubanihosting.co.za</p><p>Support: support@ubanihosting.co.za</p><p>Partnerships: partners@ubanihosting.co.za</p></article>
+        <article class="card accent reveal" data-delay="1"><h3>Want instant access?</h3><p>Create your account and deploy in minutes.</p><p><a class="cta" href="/portal/register">Open Client Portal</a></p></article>
       </section>`
     });
   }
@@ -198,15 +333,15 @@ export function renderFrontend(pathname, apiOrigin) {
       nav: portalNav(),
       apiOrigin,
       body: `
-      <h1>Client Dashboard</h1>
+      <section class="hero reveal"><h1>Client Dashboard</h1><p>Manage account, deploy projects, and monitor billing from one place.</p></section>
       <section class="grid two">
-        <article class="card">
+        <article class="card reveal">
           <h3>Account</h3>
           <button id="loadMe">Load Profile</button>
           <div id="meStatus" class="status"></div>
           <pre id="meData">Sign in first.</pre>
         </article>
-        <article class="card">
+        <article class="card reveal" data-delay="1">
           <h3>Quick Deploy</h3>
           <div class="row"><label>Domain</label><input id="deployDomain" placeholder="example.co.za" /></div>
           <button id="deployBtn">Deploy Sample Site</button>
@@ -245,9 +380,9 @@ document.getElementById("deployBtn").onclick = async () => {
       nav: portalNav(),
       apiOrigin,
       body: `
-      <h1>Login</h1>
+      <section class="hero reveal"><h1>Welcome back</h1><p>Sign in to manage sites, invoices, and support.</p></section>
       <section class="grid two">
-        <article class="card">
+        <article class="card reveal">
           <div class="row"><label>Email</label><input id="email" type="email" /></div>
           <div class="row"><label>Password</label><input id="password" type="password" /></div>
           <button id="loginBtn">Sign In</button>
@@ -275,9 +410,9 @@ document.getElementById("loginBtn").onclick = async () => {
       nav: portalNav(),
       apiOrigin,
       body: `
-      <h1>Create Account</h1>
+      <section class="hero reveal"><h1>Create your account</h1><p>Start with free hosting and scale as your business grows.</p></section>
       <section class="grid two">
-        <article class="card">
+        <article class="card reveal">
           <div class="row"><label>Email</label><input id="email" type="email" /></div>
           <div class="row"><label>Password</label><input id="password" type="password" /></div>
           <button id="registerBtn">Create Account</button>
@@ -305,14 +440,14 @@ document.getElementById("registerBtn").onclick = async () => {
       nav: portalNav(),
       apiOrigin,
       body: `
-      <h1>Billing</h1>
+      <section class="hero reveal"><h1>Billing</h1><p>Create checkout sessions and inspect invoice history instantly.</p></section>
       <section class="grid two">
-        <article class="card">
+        <article class="card reveal">
           <div class="row"><label>Amount (cents)</label><input id="amount" value="9900" /></div>
           <button id="checkoutBtn">Create Yoco Checkout</button>
           <div id="checkoutStatus" class="status"></div>
         </article>
-        <article class="card">
+        <article class="card reveal" data-delay="1">
           <h3>Invoices</h3>
           <button id="loadInvoices">Refresh</button>
           <pre id="invoicesData">No data loaded.</pre>
@@ -345,9 +480,9 @@ document.getElementById("loadInvoices").onclick = async () => {
       nav: portalNav(),
       apiOrigin,
       body: `
-      <h1>Projects</h1>
+      <section class="hero reveal"><h1>Projects</h1><p>Inspect all deployments linked to your account.</p></section>
       <section class="grid two">
-        <article class="card">
+        <article class="card reveal">
           <button id="loadProjects">Load Projects</button>
           <pre id="projectsData">No data loaded.</pre>
         </article>
@@ -370,14 +505,14 @@ document.getElementById("loadProjects").onclick = async () => {
       nav: portalNav(),
       apiOrigin,
       body: `
-      <h1>Support</h1>
+      <section class="hero reveal"><h1>Support Center</h1><p>Create and track tickets without leaving your dashboard.</p></section>
       <section class="grid two">
-        <article class="card">
+        <article class="card reveal">
           <div class="row"><label>Subject</label><input id="subject" placeholder="Need help with deployment" /></div>
           <button id="createTicketBtn">Create Ticket</button>
           <div id="ticketStatus" class="status"></div>
         </article>
-        <article class="card">
+        <article class="card reveal" data-delay="1">
           <button id="loadTicketsBtn">Load My Tickets</button>
           <pre id="ticketsData">No data loaded.</pre>
         </article>
@@ -408,9 +543,9 @@ document.getElementById("loadTicketsBtn").onclick = async () => {
       nav: adminNav(),
       apiOrigin,
       body: `
-      <h1>Admin Dashboard</h1>
+      <section class="hero reveal"><h1>Admin Command Center</h1><p>Monitor growth and platform health in real time.</p></section>
       <section class="grid two">
-        <article class="card">
+        <article class="card reveal">
           <div class="row"><label>Admin API Key</label><input id="adminKey" type="password" /></div>
           <button id="loadSummaryBtn">Load Summary</button>
           <pre id="summaryData">No data loaded.</pre>
@@ -441,9 +576,9 @@ document.getElementById("loadSummaryBtn").onclick = async () => {
       nav: adminNav(),
       apiOrigin,
       body: `
-      <h1>Users</h1>
+      <section class="hero reveal"><h1>User Management</h1><p>Review account creation velocity and customer profiles.</p></section>
       <section class="grid two">
-        <article class="card">
+        <article class="card reveal">
           <div class="row"><label>Admin API Key</label><input id="adminKey" type="password" /></div>
           <button id="loadUsersBtn">Load Users</button>
           <pre id="usersData">No data loaded.</pre>
@@ -470,9 +605,9 @@ document.getElementById("loadUsersBtn").onclick = async () => {
       nav: adminNav(),
       apiOrigin,
       body: `
-      <h1>Revenue</h1>
+      <section class="hero reveal"><h1>Revenue Analytics</h1><p>Track payment state and monetization in one view.</p></section>
       <section class="grid two">
-        <article class="card">
+        <article class="card reveal">
           <div class="row"><label>Admin API Key</label><input id="adminKey" type="password" /></div>
           <button id="loadRevenueBtn">Load Revenue</button>
           <pre id="revenueData">No data loaded.</pre>
