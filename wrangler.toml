@@ -3,7 +3,9 @@ main = "src/worker.js"
 compatibility_date = "2026-03-06"
 workers_dev = true
 routes = [
-  { pattern = "api.ubanihosting.co.za/*", zone_name = "ubanihosting.co.za" }
+  { pattern = "api.ubanihosting.co.za/*", zone_name = "ubanihosting.co.za" },
+  { pattern = "ubanihosting.co.za/*", zone_name = "ubanihosting.co.za" },
+  { pattern = "www.ubanihosting.co.za/*", zone_name = "ubanihosting.co.za" }
 ]
 
 [vars]

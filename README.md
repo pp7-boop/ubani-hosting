@@ -132,10 +132,13 @@ Frontend package layout included:
 ## Production Domain Wiring
 
 Target API domain: `api.ubanihosting.co.za`
+Primary web domains: `ubanihosting.co.za`, `www.ubanihosting.co.za`
 
 1. In Cloudflare DNS for `ubanihosting.co.za`, ensure `api` record exists and is proxied (`orange cloud`).
 2. Route is already configured in `wrangler.toml`:
    - `api.ubanihosting.co.za/*` -> `ubani-hosting-api`
+   - `ubanihosting.co.za/*` -> `ubani-hosting-api`
+   - `www.ubanihosting.co.za/*` -> `ubani-hosting-api`
    - `PUBLIC_API_BASE_URL = "https://api.ubanihosting.co.za"`
 3. Deploy:
 
