@@ -1,6 +1,6 @@
 import { getTursoClient } from "./lib/turso.js";
 import { getAuthUserId, hashPassword, signJwt, verifyPassword } from "./lib/auth.js";
-import { renderPortal } from "./portal.js";
+import { renderFrontend } from "./frontend.js";
 
 const DEFAULT_PASSWORD_HASH_ITERATIONS = 15000;
 const MIN_PASSWORD_HASH_ITERATIONS = 10000;
@@ -318,6 +318,99 @@ async function listInvoices(env, userId) {
   return json({ invoices: result.rows });
 }
 
+async function createSupportTicket(request, env, userId) {
+  const body = await parseJson(request);
+  const subject = String(body?.subject || "").trim();
+  if (!subject) return json({ error: "subject is required" }, { status: 400 });
+
+  const db = getTursoClient(env);
+  const ticket = {
+    id: crypto.randomUUID(),
+    user_id: userId,
+    subject,
+    status: "open"
+  };
+
+  await db.execute({
+    sql: `INSERT INTO tickets(id, user_id, subject, status, created_at)
+          VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    args: [ticket.id, ticket.user_id, ticket.subject, ticket.status]
+  });
+
+  return json({ ticket }, { status: 201 });
+}
+
+async function listSupportTickets(env, userId) {
+  const db = getTursoClient(env);
+  const result = await db.execute({
+    sql: `SELECT id, subject, status, created_at
+          FROM tickets
+          WHERE user_id = ?
+          ORDER BY created_at DESC
+          LIMIT 100`,
+    args: [userId]
+  });
+  return json({ tickets: result.rows });
+}
+
+function requireAdmin(request, env) {
+  const configured = String(env.ADMIN_API_KEY || "").trim();
+  if (!configured) return json({ error: "ADMIN_API_KEY is not configured" }, { status: 503 });
+
+  const provided = String(request.headers.get("x-admin-key") || "").trim();
+  if (!provided || !constantTimeEqual(configured, provided)) {
+    return json({ error: "Unauthorized admin request" }, { status: 401 });
+  }
+  return null;
+}
+
+async function adminSummary(env) {
+  const db = getTursoClient(env);
+  const [users, projects, invoices, paidRevenue] = await Promise.all([
+    db.execute({ sql: "SELECT COUNT(*) AS count FROM users" }),
+    db.execute({ sql: "SELECT COUNT(*) AS count FROM projects" }),
+    db.execute({ sql: "SELECT COUNT(*) AS count FROM invoices" }),
+    db.execute({ sql: "SELECT COALESCE(SUM(amount), 0) AS cents FROM invoices WHERE status = 'paid'" })
+  ]);
+  return json({
+    users: Number(users.rows[0]?.count || 0),
+    projects: Number(projects.rows[0]?.count || 0),
+    invoices: Number(invoices.rows[0]?.count || 0),
+    paidRevenueCents: Number(paidRevenue.rows[0]?.cents || 0)
+  });
+}
+
+async function adminUsers(env) {
+  const db = getTursoClient(env);
+  const result = await db.execute({
+    sql: `SELECT id, email, credit, created_at
+          FROM users
+          ORDER BY created_at DESC
+          LIMIT 200`
+  });
+  return json({ users: result.rows });
+}
+
+async function adminRevenue(env) {
+  const db = getTursoClient(env);
+  const [byStatus, latestPaid] = await Promise.all([
+    db.execute({
+      sql: `SELECT status, COUNT(*) AS count, COALESCE(SUM(amount), 0) AS cents
+            FROM invoices
+            GROUP BY status
+            ORDER BY status ASC`
+    }),
+    db.execute({
+      sql: `SELECT id, user_id, amount, status, created_at
+            FROM invoices
+            WHERE status = 'paid'
+            ORDER BY created_at DESC
+            LIMIT 100`
+    })
+  ]);
+  return json({ totals: byStatus.rows, latestPaid: latestPaid.rows });
+}
+
 function normalizePaymentStatus(value) {
   const status = String(value || "").toLowerCase();
   if (status === "successful" || status === "paid" || status === "completed") return "paid";
@@ -417,11 +510,12 @@ export default {
 
     try {
       if (request.method === "GET" && url.pathname === "/") {
-        return json({ message: "Ubani API", health: "/health" });
+        return html(renderFrontend(url.pathname, getCanonicalApiOrigin(request, env)));
       }
 
-      if (request.method === "GET" && url.pathname === "/portal") {
-        return html(renderPortal());
+      if (request.method === "GET") {
+        const frontend = renderFrontend(url.pathname, getCanonicalApiOrigin(request, env));
+        if (frontend) return html(frontend);
       }
 
       if (request.method === "GET" && url.pathname === "/favicon.ico") {
@@ -430,12 +524,29 @@ export default {
 
       if (request.method === "POST" && url.pathname === "/api/register") return await register(request, env);
       if (request.method === "POST" && url.pathname === "/api/login") return await login(request, env);
+      if (request.method === "GET" && url.pathname === "/api") return json({ message: "Ubani API", health: "/health" });
       if (request.method === "POST" && url.pathname === "/webhooks/yoco") {
         const rawBody = await request.text();
         return await yocoWebhook(request, env, rawBody);
       }
 
       if (request.method === "GET" && url.pathname === "/health") return json({ ok: true });
+
+      if (request.method === "GET" && url.pathname === "/api/admin/summary") {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        return await adminSummary(env);
+      }
+      if (request.method === "GET" && url.pathname === "/api/admin/users") {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        return await adminUsers(env);
+      }
+      if (request.method === "GET" && url.pathname === "/api/admin/revenue") {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        return await adminRevenue(env);
+      }
 
       const authUserId = await getAuthUserId(request, env);
       if (!authUserId) {
@@ -445,9 +556,11 @@ export default {
       if (request.method === "POST" && url.pathname === "/api/deploy") return await deploy(request, env, authUserId);
       if (request.method === "POST" && url.pathname === "/api/invoice") return await invoice(request, env, authUserId);
       if (request.method === "POST" && url.pathname === "/api/invoice/checkout") return await createInvoiceCheckout(request, env, authUserId);
+      if (request.method === "POST" && url.pathname === "/api/support/tickets") return await createSupportTicket(request, env, authUserId);
       if (request.method === "GET" && url.pathname === "/api/me") return await me(env, authUserId);
       if (request.method === "GET" && url.pathname === "/api/projects") return await listProjects(env, authUserId);
       if (request.method === "GET" && url.pathname === "/api/invoices") return await listInvoices(env, authUserId);
+      if (request.method === "GET" && url.pathname === "/api/support/tickets") return await listSupportTickets(env, authUserId);
 
       return json({ message: "Ubani API" });
     } catch (error) {

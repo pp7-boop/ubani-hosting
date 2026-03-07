@@ -12,6 +12,18 @@ Ubani Hosting API scaffold using Cloudflare Workers + Turso (`libsql`) for persi
 
 Public:
 - `GET /`
+- `GET /pricing`
+- `GET /hosting`
+- `GET /contact`
+- `GET /portal/login`
+- `GET /portal/register`
+- `GET /portal/dashboard`
+- `GET /portal/billing`
+- `GET /portal/projects`
+- `GET /portal/support`
+- `GET /admin/dashboard`
+- `GET /admin/users`
+- `GET /admin/revenue`
 - `GET /health`
 - `GET /portal`
 - `POST /api/register`
@@ -22,9 +34,16 @@ Protected (`Authorization: Bearer <token>`):
 - `POST /api/deploy`
 - `POST /api/invoice`
 - `POST /api/invoice/checkout`
+- `POST /api/support/tickets`
 - `GET /api/me`
 - `GET /api/projects`
 - `GET /api/invoices`
+- `GET /api/support/tickets`
+
+Admin (`x-admin-key: <ADMIN_API_KEY>`):
+- `GET /api/admin/summary`
+- `GET /api/admin/users`
+- `GET /api/admin/revenue`
 
 ## Local setup
 
@@ -44,6 +63,7 @@ cp .dev.vars.example .dev.vars
 - `TURSO_DATABASE_URL`
 - `TURSO_AUTH_TOKEN`
 - `JWT_SECRET`
+- `ADMIN_API_KEY` (required for `/api/admin/*`)
 - `PASSWORD_HASH_ITERATIONS` (default `15000`, allowed range `10000-50000`)
 - `YOCO_SECRET_KEY`
 - `YOCO_WEBHOOK_SECRET`
@@ -94,6 +114,12 @@ What it does on each push to `main`:
 Set these GitHub repository secrets:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
+
+Frontend package layout included:
+- `frontend/marketing/*`
+- `frontend/portal/*`
+- `frontend/admin/*`
+- `infrastructure/cloudflare-pages.json`
 
 ## Production Domain Wiring
 
