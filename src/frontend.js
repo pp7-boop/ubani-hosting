@@ -1,4 +1,11 @@
-import { BRAND_LOGO_DATA_URL, LANDING_ART_DATA_URL } from "./embedded-assets.js";
+import {
+  BRAND_LOGO_LEFT_DATA_URL,
+  BRAND_LOGO_RIGHT_DATA_URL,
+  LANDING_ART_DATA_URL,
+  PANEL_1_DATA_URL,
+  PANEL_2_DATA_URL,
+  PANEL_3_DATA_URL
+} from "./embedded-assets.js";
 
 function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
   return `<!doctype html>
@@ -32,6 +39,8 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         font-family: "Sora", "Avenir Next", "Segoe UI", sans-serif;
         color: var(--ink);
         background:
+          linear-gradient(180deg, rgba(8, 14, 30, 0.74), rgba(8, 14, 30, 0.74)),
+          url('${LANDING_ART_DATA_URL}') center/cover fixed no-repeat,
           radial-gradient(900px 500px at 0% -10%, rgba(79, 70, 229, 0.18) 0%, transparent 52%),
           radial-gradient(850px 420px at 100% -5%, rgba(6, 182, 212, 0.16) 0%, transparent 46%),
           radial-gradient(700px 300px at 50% 120%, rgba(99, 102, 241, 0.14) 0%, transparent 56%),
@@ -128,6 +137,13 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         backdrop-filter: blur(10px);
       }
       .card.accent { background: var(--panel-strong); }
+      .card .thumb {
+        width: 100%;
+        display: block;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        margin-bottom: 10px;
+      }
       .card h2, .card h3 { margin: 0 0 10px; letter-spacing: -0.01em; }
       .card p { margin: 0 0 8px; color: var(--muted); line-height: 1.45; }
       .card ul { margin: 0; padding-left: 18px; color: var(--muted); }
@@ -293,6 +309,7 @@ export function renderFrontend(pathname, apiOrigin) {
       apiOrigin,
       body: `
       <section class="hero hosting reveal">
+        <img src="${BRAND_LOGO_LEFT_DATA_URL}" alt="Ubani hosting logo" style="width:220px;max-width:58%;display:block;margin-bottom:14px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));" />
         <h1>WEB HOSTING PLATFORM<br/>FOR SOUTH AFRICA</h1>
         <p>Infrastructure and tooling for deploying sites, managing projects, and operating customer hosting workflows.</p>
         <p>
@@ -307,6 +324,7 @@ export function renderFrontend(pathname, apiOrigin) {
       </section>
       <section class="grid two">
         <article class="card reveal" data-delay="1">
+          <img class="thumb" src="${PANEL_1_DATA_URL}" alt="Design preview panel 1" />
           <h3>Platform Modules</h3>
           <ul>
             <li>Account registration and authentication APIs</li>
@@ -316,6 +334,7 @@ export function renderFrontend(pathname, apiOrigin) {
           </ul>
         </article>
         <article class="card accent reveal" data-delay="2">
+          <img class="thumb" src="${PANEL_2_DATA_URL}" alt="Design preview panel 2" />
           <h3>Control Surfaces</h3>
           <p>Client portal, API endpoints, and admin views are available under one routed Worker deployment.</p>
           <p style="margin-top:12px;"><a class="cta" href="/portal/register">Open Portal</a></p>
@@ -686,7 +705,7 @@ export function renderDesignerLanding(apiOrigin) {
     <section class="hero hosting reveal" style="background:
       linear-gradient(180deg, rgba(6,13,31,0.72), rgba(6,13,31,0.92)),
       url('${LANDING_ART_DATA_URL}') center/cover no-repeat;">
-      <img src="${BRAND_LOGO_DATA_URL}" alt="Ubani logo" style="width:210px;max-width:56%;display:block;margin-bottom:14px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));" />
+      <img src="${BRAND_LOGO_RIGHT_DATA_URL}" alt="Ubani studio logo" style="width:210px;max-width:56%;display:block;margin-bottom:14px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));" />
       <h1>WEB DESIGN STUDIO<br/>FOR SOUTH AFRICA</h1>
       <p>Design systems, branded websites, and production-ready build pipelines for growing businesses.</p>
       <p>
@@ -697,9 +716,9 @@ export function renderDesignerLanding(apiOrigin) {
       <p style="margin-top:12px;"><a class="cta" href="${apiOrigin}/portal/register">Start a Project</a></p>
     </section>
     <section class="grid three">
-      <article class="card reveal" data-delay="1"><h3>Identity + Layout</h3><p>Brand direction, typography systems, and conversion-focused page structure.</p></article>
-      <article class="card reveal" data-delay="2"><h3>Build + Integrate</h3><p>Frontend implementation, CMS/API integration, and deployment-ready handoff.</p></article>
-      <article class="card reveal" data-delay="3"><h3>Operate + Iterate</h3><p>Analytics-informed updates, SEO refinements, and ongoing improvements.</p></article>
+      <article class="card reveal" data-delay="1"><img class="thumb" src="${PANEL_1_DATA_URL}" alt="Studio work sample 1" /><h3>Identity + Layout</h3><p>Brand direction, typography systems, and conversion-focused page structure.</p></article>
+      <article class="card reveal" data-delay="2"><img class="thumb" src="${PANEL_2_DATA_URL}" alt="Studio work sample 2" /><h3>Build + Integrate</h3><p>Frontend implementation, CMS/API integration, and deployment-ready handoff.</p></article>
+      <article class="card reveal" data-delay="3"><img class="thumb" src="${PANEL_3_DATA_URL}" alt="Studio work sample 3" /><h3>Operate + Iterate</h3><p>Analytics-informed updates, SEO refinements, and ongoing improvements.</p></article>
     </section>`
   });
 }
