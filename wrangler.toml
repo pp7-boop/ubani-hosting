@@ -6,5 +6,8 @@ routes = [
   { pattern = "api.ubanihosting.co.za/*", zone_name = "ubanihosting.co.za" }
 ]
 
+[vars]
+PUBLIC_API_BASE_URL = "https://api.ubanihosting.co.za"
+
 [observability]
 enabled = true

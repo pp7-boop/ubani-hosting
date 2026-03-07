@@ -192,9 +192,20 @@ function getYocoSecret(env) {
   return key;
 }
 
+function getCanonicalApiOrigin(request, env) {
+  const configured = (env.PUBLIC_API_BASE_URL || env.API_BASE_URL || "").trim();
+  if (!configured) return new URL(request.url).origin;
+
+  try {
+    return new URL(configured).origin;
+  } catch {
+    throw new Error("PUBLIC_API_BASE_URL must be a valid absolute URL");
+  }
+}
+
 async function createYocoCheckout(amount, invoiceId, request, env) {
   const secret = getYocoSecret(env);
-  const origin = new URL(request.url).origin;
+  const origin = getCanonicalApiOrigin(request, env);
   const successUrl = env.PAYMENT_SUCCESS_URL || `${origin}/portal`;
   const cancelUrl = env.PAYMENT_CANCEL_URL || `${origin}/portal`;
 

@@ -47,6 +47,7 @@ cp .dev.vars.example .dev.vars
 - `PASSWORD_HASH_ITERATIONS` (default `15000`, allowed range `10000-50000`)
 - `YOCO_SECRET_KEY`
 - `YOCO_WEBHOOK_SECRET`
+- `PUBLIC_API_BASE_URL` (e.g. `https://api.ubanihosting.co.za`)
 - `PAYMENT_SUCCESS_URL`
 - `PAYMENT_CANCEL_URL`
 
@@ -87,6 +88,7 @@ Target API domain: `api.ubanihosting.co.za`
 1. In Cloudflare DNS for `ubanihosting.co.za`, ensure `api` record exists and is proxied (`orange cloud`).
 2. Route is already configured in `wrangler.toml`:
    - `api.ubanihosting.co.za/*` -> `ubani-hosting-api`
+   - `PUBLIC_API_BASE_URL = "https://api.ubanihosting.co.za"`
 3. Deploy:
 
 ```bash
@@ -124,7 +126,6 @@ BASE_URL=https://api.ubanihosting.co.za bash smoke-test.sh
 
 Open:
 
-- `https://ubani-hosting-api.ubani-hosting.workers.dev/portal`
 - `https://api.ubanihosting.co.za/portal`
 
 Portal supports register/login, deploying files, creating Yoco checkout sessions, and viewing projects/invoices.
