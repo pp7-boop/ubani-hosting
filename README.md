@@ -101,6 +101,14 @@ wrangler secret put PAYMENT_CANCEL_URL
 npm run deploy
 ```
 
+If local `wrangler` OAuth expires, use API token auth for stable deploys:
+
+```bash
+cp .env.cloudflare.example .env.cloudflare
+# set CLOUDFLARE_API_TOKEN in .env.cloudflare
+npm run deploy
+```
+
 ## CI/CD (GitHub Actions)
 
 Workflow file:
