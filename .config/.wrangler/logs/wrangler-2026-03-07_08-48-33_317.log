@@ -1,0 +1,100 @@
+
+--- 2026-03-07T08:48:33.542Z debug
+🪵  Writing logs to "/workspaces/ubani-hosting/.config/.wrangler/logs/wrangler-2026-03-07_08-48-33_317.log"
+---
+
+--- 2026-03-07T08:48:33.542Z debug
+.env file not found at "/workspaces/ubani-hosting/.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-03-07T08:48:33.543Z debug
+.env file not found at "/workspaces/ubani-hosting/.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-03-07T08:48:33.554Z debug
+Metrics dispatcher: Posting data {"deviceId":"7135e9e5-d6fb-4657-81a4-eaecb7fedad0","event":"wrangler command started","timestamp":1772873313554,"properties":{"amplitude_session_id":1772873313553,"amplitude_event_id":0,"wranglerVersion":"4.71.0","wranglerMajorVersion":4,"wranglerMinorVersion":71,"wranglerPatchVersion":0,"osPlatform":"Linux","osVersion":"#50~22.04.1-Ubuntu SMP Wed Dec  3 15:13:22 UTC 2025","nodeVersion":24,"isFirstUsage":false,"configFileType":"toml","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":true,"hasAssets":false,"agent":null,"argsUsed":[],"argsCombination":"","sanitizedCommand":"tail","sanitizedArgs":{}}}
+---
+
+--- 2026-03-07T08:48:33.586Z log
+
+ ⛅️ wrangler 4.71.0
+───────────────────
+---
+
+--- 2026-03-07T08:48:33.587Z debug
+Metrics dispatcher: Posting data {"deviceId":"7135e9e5-d6fb-4657-81a4-eaecb7fedad0","event":"begin log stream","timestamp":1772873313587,"properties":{"amplitude_session_id":1772873313587,"amplitude_event_id":0,"wranglerVersion":"4.71.0","wranglerMajorVersion":4,"wranglerMinorVersion":71,"wranglerPatchVersion":0,"osPlatform":"Linux","osVersion":"#50~22.04.1-Ubuntu SMP Wed Dec  3 15:13:22 UTC 2025","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":true,"hasAssets":false,"agent":null,"category":"Workers","os":"linux:x64"}}
+---
+
+--- 2026-03-07T08:48:33.589Z debug
+Retrieving cached values for account from node_modules/.cache/wrangler
+---
+
+--- 2026-03-07T08:48:33.589Z debug
+Saving to cache: {"account":{"id":"22f8a8390779ed8d3951cab297d2b32a","name":""}}
+---
+
+--- 2026-03-07T08:48:33.591Z debug
+-- START CF API REQUEST: POST https://api.cloudflare.com/client/v4/accounts/22f8a8390779ed8d3951cab297d2b32a/workers/scripts/ubani-hosting-api/tails
+---
+
+--- 2026-03-07T08:48:33.591Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T08:48:33.591Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T08:48:33.591Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T08:48:33.591Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-03-07T08:48:35.983Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-03-07T08:48:35.985Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T08:48:35.985Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-03-07T08:48:35.985Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-03-07T08:48:35.995Z log
+Successfully created tail, expires at 2026-03-07T14:48:35Z
+---
+
+--- 2026-03-07T08:48:36.898Z log
+Connected to ubani-hosting-api, waiting for logs...
+---
+
+--- 2026-03-07T08:48:36.899Z debug
+Metrics dispatcher: Posting data {"deviceId":"7135e9e5-d6fb-4657-81a4-eaecb7fedad0","event":"wrangler command completed","timestamp":1772873316899,"properties":{"amplitude_session_id":1772873313553,"amplitude_event_id":1,"wranglerVersion":"4.71.0","wranglerMajorVersion":4,"wranglerMinorVersion":71,"wranglerPatchVersion":0,"osPlatform":"Linux","osVersion":"#50~22.04.1-Ubuntu SMP Wed Dec  3 15:13:22 UTC 2025","nodeVersion":24,"isFirstUsage":false,"configFileType":"toml","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":true,"hasAssets":false,"agent":null,"argsUsed":[],"argsCombination":"","sanitizedCommand":"tail","sanitizedArgs":{},"durationMs":3355}}
+---
+
+--- 2026-03-07T08:49:15.885Z log
+GET https://ubani-hosting-api.ubani-hosting.workers.dev/ - Ok @ 3/7/2026, 8:49:15 AM
+---
+
+--- 2026-03-07T08:49:23.342Z log
+GET https://ubani-hosting-api.ubani-hosting.workers.dev/health - Ok @ 3/7/2026, 8:49:22 AM
+---
+
+--- 2026-03-07T08:49:23.656Z log
+POST https://ubani-hosting-api.ubani-hosting.workers.dev/api/register - Exception Thrown @ 3/7/2026, 8:49:22 AM
+---
+
+--- 2026-03-07T08:49:24.431Z error
+✘ [ERROR]   Error: SERVER_ERROR: Server returned HTTP status 400
+
+
+---

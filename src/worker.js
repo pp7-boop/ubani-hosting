@@ -170,8 +170,8 @@ export default {
         return new Response(null, { status: 204 });
       }
 
-      if (request.method === "POST" && url.pathname === "/api/register") return register(request, env);
-      if (request.method === "POST" && url.pathname === "/api/login") return login(request, env);
+      if (request.method === "POST" && url.pathname === "/api/register") return await register(request, env);
+      if (request.method === "POST" && url.pathname === "/api/login") return await login(request, env);
 
       if (request.method === "GET" && url.pathname === "/health") return json({ ok: true });
 
@@ -180,9 +180,9 @@ export default {
         return json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      if (request.method === "POST" && url.pathname === "/api/deploy") return deploy(request, env, authUserId);
-      if (request.method === "POST" && url.pathname === "/api/invoice") return invoice(request, env, authUserId);
-      if (request.method === "GET" && url.pathname === "/api/me") return me(env, authUserId);
+      if (request.method === "POST" && url.pathname === "/api/deploy") return await deploy(request, env, authUserId);
+      if (request.method === "POST" && url.pathname === "/api/invoice") return await invoice(request, env, authUserId);
+      if (request.method === "GET" && url.pathname === "/api/me") return await me(env, authUserId);
 
       return json({ message: "Ubani API" });
     } catch (error) {
