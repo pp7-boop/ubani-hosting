@@ -81,6 +81,20 @@ wrangler secret put PAYMENT_CANCEL_URL
 npm run deploy
 ```
 
+## CI/CD (GitHub Actions)
+
+Workflow file:
+- `.github/workflows/deploy.yml`
+
+What it does on each push to `main`:
+- installs dependencies
+- deploys Worker with Wrangler
+- runs `scripts/verify-production.sh`
+
+Set these GitHub repository secrets:
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+
 ## Production Domain Wiring
 
 Target API domain: `api.ubanihosting.co.za`
@@ -117,6 +131,16 @@ BASE_URL=https://api.ubanihosting.co.za bash smoke-test.sh
 
 ```bash
 bash scripts/verify-production.sh
+```
+
+8. Validate checkout creation path:
+
+```bash
+# register/login first (or reuse an existing token), then:
+curl -sS -X POST https://api.ubanihosting.co.za/api/invoice/checkout \
+  -H "content-type: application/json" \
+  -H "authorization: Bearer <TOKEN>" \
+  --data '{"amount":9900}'
 ```
 
 ## Billing flow
