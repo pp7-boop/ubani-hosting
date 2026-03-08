@@ -139,6 +139,54 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
       .card p { margin: 0 0 8px; color: var(--muted); line-height: 1.45; }
       .card ul { margin: 0; padding-left: 18px; color: var(--muted); }
       .card li + li { margin-top: 7px; }
+      .profile-output {
+        margin-top: 10px;
+        border: 1px solid rgba(133, 164, 224, 0.35);
+        border-radius: 12px;
+        background: rgba(7, 19, 38, 0.62);
+        padding: 12px;
+      }
+      .profile-placeholder {
+        color: #9ab3df;
+        margin: 0;
+        font-size: 0.9rem;
+      }
+      .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+      }
+      .profile-item {
+        border: 1px solid rgba(145, 176, 235, 0.24);
+        background: rgba(11, 27, 50, 0.74);
+        border-radius: 10px;
+        padding: 9px;
+      }
+      .profile-item .label {
+        display: block;
+        color: #95b0e1;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 0.68rem;
+        margin-bottom: 4px;
+      }
+      .profile-item .value {
+        color: #eef4ff;
+        font-size: 0.9rem;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+      }
+      .profile-raw {
+        margin-top: 10px;
+      }
+      .profile-raw summary {
+        cursor: pointer;
+        color: #b6cefb;
+        font-size: 0.84rem;
+      }
+      .profile-raw pre {
+        margin-top: 8px;
+      }
 
       .pill {
         display: inline-block;
@@ -458,7 +506,9 @@ export function renderFrontend(pathname, apiOrigin) {
           <h3>Account</h3>
           <button id="loadMe">Load Profile</button>
           <div id="meStatus" class="status"></div>
-          <pre id="meData">Sign in first.</pre>
+          <div id="meData" class="profile-output">
+            <p class="profile-placeholder">Sign in first, then click <strong>Load Profile</strong>.</p>
+          </div>
         </article>
         <article class="card reveal" data-delay="1">
           <h3>Quick Deploy</h3>
@@ -468,11 +518,51 @@ export function renderFrontend(pathname, apiOrigin) {
         </article>
       </section>`,
       script: `${portalScript}
+const escapeHtml = (value) => String(value ?? "")
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;")
+  .replaceAll("'", "&#39;");
+const formatCreatedAt = (input) => {
+  if (!input) return "Not available";
+  const normalized = String(input).replace(" ", "T");
+  const maybeDate = new Date(normalized.endsWith("Z") ? normalized : normalized + "Z");
+  if (Number.isNaN(maybeDate.getTime())) return String(input);
+  return maybeDate.toLocaleString();
+};
+const renderProfile = (payload) => {
+  const user = payload && payload.user ? payload.user : {};
+  return \`
+    <div class="profile-grid">
+      <div class="profile-item">
+        <span class="label">User ID</span>
+        <div class="value">\${escapeHtml(user.id || "Not available")}</div>
+      </div>
+      <div class="profile-item">
+        <span class="label">Email</span>
+        <div class="value">\${escapeHtml(user.email || "Not available")}</div>
+      </div>
+      <div class="profile-item">
+        <span class="label">Credit</span>
+        <div class="value">\${escapeHtml(String(user.credit ?? 0))}</div>
+      </div>
+      <div class="profile-item">
+        <span class="label">Created</span>
+        <div class="value">\${escapeHtml(formatCreatedAt(user.created_at))}</div>
+      </div>
+    </div>
+    <details class="profile-raw">
+      <summary>Show raw profile JSON</summary>
+      <pre>\${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
+    </details>
+  \`;
+};
 document.getElementById("loadMe").onclick = async () => {
   try {
     setStatus("meStatus", "Loading...");
     const data = await api("/api/me", {}, true);
-    document.getElementById("meData").textContent = JSON.stringify(data, null, 2);
+    document.getElementById("meData").innerHTML = renderProfile(data);
     setStatus("meStatus", "Loaded.");
   } catch (error) { setStatus("meStatus", error.message, true); }
 };
