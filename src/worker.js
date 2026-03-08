@@ -44,7 +44,7 @@ function html(content, init = {}) {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "public, max-age=120",
       ...SECURITY_HEADERS,
-      "content-security-policy": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; connect-src 'self' https://api.ubanihosting.co.za https://cloudflareinsights.com https://*.cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+      "content-security-policy": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' https:; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; connect-src 'self' https://api.ubanihosting.co.za https://cloudflareinsights.com https://*.cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
       ...(init.headers || {})
     }
   });
@@ -182,6 +182,29 @@ function getRobotsTxt() {
     "Disallow: /admin/",
     "Disallow: /portal/"
   ].join("\n");
+}
+
+async function serveStaticAsset(request, env) {
+  if (!env.ASSETS || typeof env.ASSETS.fetch !== "function") {
+    return text("Asset binding unavailable", { status: 503, headers: { "cache-control": "no-store" } });
+  }
+
+  const response = await env.ASSETS.fetch(request);
+  if (!response || response.status === 404) {
+    return text("Not Found", { status: 404, headers: { "cache-control": "public, max-age=60" } });
+  }
+
+  const headers = new Headers(response.headers);
+  headers.set("cache-control", "public, max-age=604800, immutable");
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    headers.set(name, value);
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
 }
 
 async function register(request, env) {
@@ -629,6 +652,11 @@ export default {
     const host = url.hostname.toLowerCase();
 
     try {
+      if ((request.method === "GET" || isHead) && url.pathname.startsWith("/assets/")) {
+        const assetResponse = await serveStaticAsset(request, env);
+        return isHead ? headFromResponse(assetResponse) : assetResponse;
+      }
+
       if (request.method === "GET" && url.pathname === "/robots.txt") {
         return text(getRobotsTxt(), { headers: { "cache-control": "public, max-age=1800" } });
       }

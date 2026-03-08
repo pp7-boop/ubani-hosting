@@ -1,11 +1,7 @@
-import {
-  BRAND_LOGO_LEFT_DATA_URL,
-  BRAND_LOGO_RIGHT_DATA_URL,
-  LANDING_ART_DATA_URL,
-  PANEL_1_DATA_URL,
-  PANEL_2_DATA_URL,
-  PANEL_3_DATA_URL
-} from "./embedded-assets.js";
+const LANDING_ART_URL = "/assets/landing.png";
+const PANEL_1_URL = "/assets/panel-1.png";
+const PANEL_2_URL = "/assets/panel-2.png";
+const PANEL_3_URL = "/assets/panel-3.png";
 
 function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
   return `<!doctype html>
@@ -20,18 +16,18 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --bg: #f5f7ff;
-        --bg-2: #eef2ff;
-        --panel: rgba(255, 255, 255, 0.82);
-        --panel-strong: rgba(244, 248, 255, 0.92);
-        --ink: #151e35;
-        --muted: #5d6785;
-        --brand: #4f46e5;
-        --brand-2: #06b6d4;
-        --line: rgba(125, 145, 205, 0.28);
-        --ok: #0284c7;
-        --danger: #b91c1c;
-        --shadow: 0 14px 35px rgba(49, 67, 126, 0.12);
+        --bg: #081425;
+        --bg-2: #0d1d34;
+        --panel: rgba(10, 24, 44, 0.72);
+        --panel-strong: rgba(16, 34, 60, 0.82);
+        --ink: #ecf2ff;
+        --muted: #adc1e8;
+        --brand: #ff7a18;
+        --brand-2: #4f7fff;
+        --line: rgba(141, 174, 236, 0.24);
+        --ok: #7dd3fc;
+        --danger: #fca5a5;
+        --shadow: 0 18px 44px rgba(1, 10, 28, 0.42);
       }
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; }
@@ -40,23 +36,23 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         color: var(--ink);
         background:
           linear-gradient(180deg, rgba(8, 14, 30, 0.74), rgba(8, 14, 30, 0.74)),
-          url('${LANDING_ART_DATA_URL}') center/cover fixed no-repeat,
+          url('${LANDING_ART_URL}') center/cover fixed no-repeat,
           radial-gradient(900px 500px at 0% -10%, rgba(79, 70, 229, 0.18) 0%, transparent 52%),
           radial-gradient(850px 420px at 100% -5%, rgba(6, 182, 212, 0.16) 0%, transparent 46%),
           radial-gradient(700px 300px at 50% 120%, rgba(99, 102, 241, 0.14) 0%, transparent 56%),
           linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
         min-height: 100vh;
       }
-      a { color: #4338ca; text-decoration: none; }
+      a { color: #b6d3ff; text-decoration: none; }
       a:hover { text-decoration: underline; }
 
       header {
         position: sticky;
         top: 0;
         z-index: 20;
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.78);
-        border-bottom: 1px solid rgba(111, 127, 187, 0.24);
+        backdrop-filter: blur(12px);
+        background: linear-gradient(180deg, rgba(5, 13, 28, 0.82), rgba(5, 13, 28, 0.62));
+        border-bottom: 1px solid rgba(128, 157, 220, 0.24);
       }
       .bar {
         max-width: 1160px;
@@ -74,6 +70,7 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         gap: 9px;
         font-weight: 800;
         letter-spacing: 0.02em;
+        color: #f6f9ff;
       }
       nav { display: flex; flex-wrap: wrap; gap: 6px; }
       nav a {
@@ -81,26 +78,27 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         align-items: center;
         padding: 8px 10px;
         border-radius: 10px;
-        color: #4d5a7f;
+        color: #c5d6f5;
         font-size: 0.9rem;
       }
-      nav a:hover { text-decoration: none; background: rgba(99, 102, 241, 0.12); }
-      nav a strong { color: #1c2550; }
+      nav a:hover { text-decoration: none; background: rgba(97, 133, 216, 0.22); }
+      nav a strong { color: #f6f9ff; }
 
       main { max-width: 1160px; margin: 0 auto; padding: 28px 18px 60px; }
       .hero {
         margin-bottom: 18px;
-        padding: 20px;
+        padding: 28px;
         border: 1px solid var(--line);
-        border-radius: 20px;
-        background: linear-gradient(140deg, rgba(255, 255, 255, 0.9), rgba(240, 246, 255, 0.9));
+        border-radius: 22px;
+        background: linear-gradient(155deg, rgba(10, 24, 46, 0.88), rgba(12, 30, 56, 0.86));
         box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
       }
       .hero.hosting {
         background:
-          radial-gradient(500px 220px at 50% 100%, rgba(255, 122, 24, 0.24) 0%, transparent 70%),
-          radial-gradient(900px 300px at 0% 0%, rgba(39, 84, 184, 0.34) 0%, transparent 60%),
-          linear-gradient(180deg, #0a1731 0%, #081126 100%);
+          radial-gradient(560px 260px at 84% 104%, rgba(255, 122, 24, 0.30) 0%, transparent 75%),
+          radial-gradient(1000px 360px at 8% 2%, rgba(57, 97, 206, 0.34) 0%, transparent 64%),
+          linear-gradient(180deg, #091325 0%, #08101f 100%);
         border-color: rgba(103, 136, 220, 0.5);
       }
       .hero.hosting h1,
@@ -115,7 +113,7 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         line-height: 1.05;
         letter-spacing: -0.02em;
       }
-      .hero p { margin: 0; color: #5f6782; }
+      .hero p { margin: 0; color: #bfd0f3; }
 
       .grid { display: grid; gap: 14px; }
       .two { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
@@ -124,8 +122,8 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
       .card {
         background: var(--panel);
         border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 15px;
+        border-radius: 18px;
+        padding: 16px;
         box-shadow: var(--shadow);
         backdrop-filter: blur(10px);
       }
@@ -140,22 +138,31 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
       .card h2, .card h3 { margin: 0 0 10px; letter-spacing: -0.01em; }
       .card p { margin: 0 0 8px; color: var(--muted); line-height: 1.45; }
       .card ul { margin: 0; padding-left: 18px; color: var(--muted); }
+      .card li + li { margin-top: 7px; }
 
       .pill {
         display: inline-block;
-        border: 1px solid rgba(129, 146, 212, 0.45);
-        background: rgba(243, 247, 255, 0.9);
-        color: #37456d;
+        border: 1px solid rgba(135, 168, 231, 0.42);
+        background: rgba(18, 43, 82, 0.64);
+        color: #d8e6ff;
         border-radius: 999px;
-        padding: 4px 10px;
+        padding: 5px 11px;
         font-size: 0.74rem;
         margin-right: 6px;
         margin-top: 4px;
       }
+      .eyebrow {
+        display: inline-block;
+        margin-bottom: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        color: #98b7ee;
+      }
       .cta, button {
         border: 0;
-        border-radius: 11px;
-        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--brand), #ff9f43);
         color: #f8f9ff;
         padding: 10px 14px;
         font: inherit;
@@ -165,27 +172,59 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
       }
       .cta { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
       .cta:hover, button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14); text-decoration: none; }
-      button.secondary { background: rgba(227, 234, 255, 0.85); color: #2f3c66; border: 1px solid rgba(145, 159, 214, 0.4); }
+      .cta.ghost, button.secondary {
+        background: rgba(28, 55, 101, 0.75);
+        color: #dce9ff;
+        border: 1px solid rgba(145, 179, 239, 0.4);
+      }
+      .cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .stat-strip {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 10px;
+      }
+      .stat {
+        border: 1px solid rgba(150, 181, 238, 0.28);
+        border-radius: 12px;
+        background: rgba(8, 24, 48, 0.62);
+        padding: 10px;
+      }
+      .stat strong {
+        display: block;
+        font-size: 1.08rem;
+        color: #f3f8ff;
+      }
+      .stat span {
+        color: #a9c1e9;
+        font-size: 0.78rem;
+      }
 
       .row { display: grid; gap: 6px; margin-bottom: 10px; }
-      label { color: #4f5f85; font-size: 0.9rem; }
+      label { color: #b9cdf0; font-size: 0.9rem; }
       input, textarea {
         width: 100%;
-        border: 1px solid rgba(137, 153, 209, 0.45);
+        border: 1px solid rgba(137, 164, 221, 0.42);
         border-radius: 10px;
         padding: 10px 11px;
         font: inherit;
-        background: rgba(255, 255, 255, 0.9);
-        color: #1a2647;
+        background: rgba(8, 24, 45, 0.74);
+        color: #f0f6ff;
       }
+      input::placeholder, textarea::placeholder { color: #89a4d4; }
       textarea { min-height: 110px; resize: vertical; }
       pre {
         margin: 0;
         padding: 11px;
         border-radius: 10px;
-        border: 1px solid rgba(142, 157, 214, 0.35);
-        background: rgba(248, 251, 255, 0.94);
-        color: #203058;
+        border: 1px solid rgba(133, 164, 224, 0.35);
+        background: rgba(7, 19, 38, 0.72);
+        color: #dbe8ff;
         font-family: "IBM Plex Mono", monospace;
         font-size: 0.8rem;
         white-space: pre-wrap;
@@ -202,7 +241,7 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
 
       footer {
         margin-top: 20px;
-        color: #5f6f95;
+        color: #89a5d8;
         font-size: .82rem;
       }
       .mono { font-family: "IBM Plex Mono", monospace; }
@@ -302,23 +341,29 @@ export function renderFrontend(pathname, apiOrigin) {
       apiOrigin,
       body: `
       <section class="hero hosting reveal">
-        <img src="${BRAND_LOGO_LEFT_DATA_URL}" alt="Ubani hosting logo" style="width:220px;max-width:58%;display:block;margin-bottom:14px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));" />
-        <h1>WEB PLATFORM<br/>FOR SOUTH AFRICA</h1>
-        <p>Design, hosting, billing, and support workflows in one operational platform.</p>
+        <span class="eyebrow">Ubani Platform</span>
+        <h1>Design, Hosting, Billing,<br/>and Support in One Stack</h1>
+        <p>A cleaner way to run client website operations: launch projects, track billing, and manage support from one platform.</p>
         <p>
           <span class="pill">Project Deployments</span>
-          <span class="pill">Billing Integration</span>
-          <span class="pill">Admin Controls</span>
+          <span class="pill">Yoco Billing</span>
+          <span class="pill">Admin Reporting</span>
+          <span class="pill">Ticket Workflow</span>
         </p>
-        <div class="row" style="margin-top:12px;grid-template-columns:1fr auto;">
-          <input placeholder="Tell us your project domain" />
-          <a class="cta" href="/portal/register">Start Project</a>
+        <div class="cta-row">
+          <a class="cta" href="/portal/register">Open Client Portal</a>
+          <a class="cta ghost" href="/pricing">View Plans</a>
+        </div>
+        <div class="stat-strip">
+          <div class="stat"><strong>API + Frontend</strong><span>Single deployment surface</span></div>
+          <div class="stat"><strong>R0 Launch Stack</strong><span>Cloudflare-first architecture</span></div>
+          <div class="stat"><strong>SA Payments</strong><span>Yoco checkout flow integrated</span></div>
         </div>
       </section>
       <section class="grid three">
         <article class="card reveal" data-delay="1">
-          <img class="thumb" src="${PANEL_1_DATA_URL}" alt="Design preview panel 1" />
-          <h3>What You Get</h3>
+          <img class="thumb" src="${PANEL_1_URL}" alt="Design preview panel 1" />
+          <h3>Platform Coverage</h3>
           <ul>
             <li>Account registration and authentication APIs</li>
             <li>Project deployment and storage tracking</li>
@@ -327,16 +372,16 @@ export function renderFrontend(pathname, apiOrigin) {
           </ul>
         </article>
         <article class="card reveal" data-delay="2">
-          <img class="thumb" src="${PANEL_2_DATA_URL}" alt="Design preview panel 2" />
-          <h3>How We Work</h3>
-          <p><strong>1.</strong> Discovery and scope</p>
-          <p><strong>2.</strong> Design and build</p>
-          <p><strong>3.</strong> Deploy and handover</p>
+          <img class="thumb" src="${PANEL_2_URL}" alt="Design preview panel 2" />
+          <h3>Delivery Flow</h3>
+          <p><strong>1.</strong> Scope your project in the portal</p>
+          <p><strong>2.</strong> Build and deploy from dashboard tools</p>
+          <p><strong>3.</strong> Track billing and support in production</p>
         </article>
         <article class="card accent reveal" data-delay="3">
-          <img class="thumb" src="${PANEL_3_DATA_URL}" alt="Design preview panel 3" />
-          <h3>Need Clarity First?</h3>
-          <p>Tell us your goal, timeline, and stack preference. We’ll map the cleanest build path.</p>
+          <img class="thumb" src="${PANEL_3_URL}" alt="Design preview panel 3" />
+          <h3>Project Planning</h3>
+          <p>Share your timeline and target outcome. We’ll align platform setup, design scope, and delivery sequencing.</p>
           <p style="margin-top:12px;"><a class="cta" href="/contact">Book Discovery</a></p>
         </article>
       </section>
@@ -345,10 +390,11 @@ export function renderFrontend(pathname, apiOrigin) {
           <h3>Frequently Asked</h3>
           <p><strong>Can we use our own domain?</strong> Yes, domains are mapped through your Cloudflare zone.</p>
           <p><strong>Can your team handle support flows?</strong> Yes, ticketing and admin controls are built in.</p>
+          <p><strong>Can we start free?</strong> Yes, use the Free plan and upgrade when traffic grows.</p>
         </article>
         <article class="card reveal" data-delay="1">
           <h3>Primary Next Step</h3>
-          <p>Create an account and submit your first project scope from the portal.</p>
+          <p>Create an account, deploy your first project, then test billing + support from the same dashboard.</p>
           <p style="margin-top:12px;"><a class="cta" href="/portal/register">Create Account</a></p>
         </article>
       </section>`
@@ -712,25 +758,28 @@ export function renderDesignerLanding(apiOrigin) {
       `<a href="${apiOrigin}/portal/register">Client Portal</a>`,
       `<a href="${apiOrigin}/contact">Contact</a>`
     ].join(""),
-    apiOrigin,
-    body: `
-    <section class="hero hosting reveal" style="background:
+      apiOrigin,
+      body: `
+      <section class="hero hosting reveal" style="background:
       linear-gradient(180deg, rgba(6,13,31,0.72), rgba(6,13,31,0.92)),
-      url('${LANDING_ART_DATA_URL}') center/cover no-repeat;">
-      <img src="${BRAND_LOGO_RIGHT_DATA_URL}" alt="Ubani studio logo" style="width:210px;max-width:56%;display:block;margin-bottom:14px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));" />
-      <h1>WEB DESIGN STUDIO<br/>FOR SOUTH AFRICA</h1>
-      <p>Web design, frontend build, and deployment support for brands that need a serious digital presence.</p>
+      url('${LANDING_ART_URL}') center/cover no-repeat;">
+      <span class="eyebrow">Ubani Studio</span>
+      <h1>Web Design Studio<br/>for South African Brands</h1>
+      <p>Modern interface design, production frontend builds, and deployment support for businesses that need a stronger web presence.</p>
       <p>
         <span class="pill">Branding</span>
         <span class="pill">Web Design</span>
         <span class="pill">Production Build</span>
       </p>
-      <p style="margin-top:12px;"><a class="cta" href="${apiOrigin}/portal/register">Start a Project</a></p>
+      <div class="cta-row">
+        <a class="cta" href="${apiOrigin}/portal/register">Start a Project</a>
+        <a class="cta ghost" href="${apiOrigin}/contact">Book Discovery</a>
+      </div>
     </section>
     <section class="grid three">
-      <article class="card reveal" data-delay="1"><img class="thumb" src="${PANEL_1_DATA_URL}" alt="Studio work sample 1" /><h3>Design System</h3><p>Layout hierarchy, typography, and component language aligned to your brand.</p></article>
-      <article class="card reveal" data-delay="2"><img class="thumb" src="${PANEL_2_DATA_URL}" alt="Studio work sample 2" /><h3>Build Delivery</h3><p>Production-ready frontend build with clear asset structure and deployment paths.</p></article>
-      <article class="card reveal" data-delay="3"><img class="thumb" src="${PANEL_3_DATA_URL}" alt="Studio work sample 3" /><h3>Post-Launch</h3><p>Iteration support for content updates, performance tuning, and feature refinement.</p></article>
+      <article class="card reveal" data-delay="1"><img class="thumb" src="${PANEL_1_URL}" alt="Studio work sample 1" /><h3>Design System</h3><p>Layout hierarchy, typography, and component language aligned to your brand.</p></article>
+      <article class="card reveal" data-delay="2"><img class="thumb" src="${PANEL_2_URL}" alt="Studio work sample 2" /><h3>Build Delivery</h3><p>Production-ready frontend build with clear asset structure and deployment paths.</p></article>
+      <article class="card reveal" data-delay="3"><img class="thumb" src="${PANEL_3_URL}" alt="Studio work sample 3" /><h3>Post-Launch</h3><p>Iteration support for content updates, performance tuning, and feature refinement.</p></article>
     </section>
     <section class="grid two" style="margin-top:14px;">
       <article class="card reveal"><h3>FAQ</h3><p><strong>Do you redesign existing sites?</strong> Yes, we can work from a live or legacy codebase.</p><p><strong>Can design and hosting be bundled?</strong> Yes, this studio flow is connected to the hosting platform.</p></article>

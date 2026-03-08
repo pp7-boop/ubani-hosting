@@ -13,3 +13,7 @@ PUBLIC_API_BASE_URL = "https://api.ubanihosting.co.za"
 
 [observability]
 enabled = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
