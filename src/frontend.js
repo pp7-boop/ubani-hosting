@@ -75,13 +75,6 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
         font-weight: 800;
         letter-spacing: 0.02em;
       }
-      .brand-dot {
-        width: 11px;
-        height: 11px;
-        border-radius: 999px;
-        background: linear-gradient(135deg, var(--brand), var(--brand-2));
-        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
-      }
       nav { display: flex; flex-wrap: wrap; gap: 6px; }
       nav a {
         display: inline-flex;
@@ -224,7 +217,7 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
   <body>
     <header>
       <div class="bar">
-        <div class="brand"><span class="brand-dot"></span>Ubani Hosting</div>
+        <div class="brand">Ubani Hosting</div>
         <nav>${nav}</nav>
       </div>
     </header>
@@ -310,22 +303,22 @@ export function renderFrontend(pathname, apiOrigin) {
       body: `
       <section class="hero hosting reveal">
         <img src="${BRAND_LOGO_LEFT_DATA_URL}" alt="Ubani hosting logo" style="width:220px;max-width:58%;display:block;margin-bottom:14px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));" />
-        <h1>WEB HOSTING PLATFORM<br/>FOR SOUTH AFRICA</h1>
-        <p>Infrastructure and tooling for deploying sites, managing projects, and operating customer hosting workflows.</p>
+        <h1>WEB PLATFORM<br/>FOR SOUTH AFRICA</h1>
+        <p>Design, hosting, billing, and support workflows in one operational platform.</p>
         <p>
           <span class="pill">Project Deployments</span>
           <span class="pill">Billing Integration</span>
           <span class="pill">Admin Controls</span>
         </p>
         <div class="row" style="margin-top:12px;grid-template-columns:1fr auto;">
-          <input placeholder="Enter your domain name" />
-          <a class="cta" href="/portal/register">Register</a>
+          <input placeholder="Tell us your project domain" />
+          <a class="cta" href="/portal/register">Start Project</a>
         </div>
       </section>
-      <section class="grid two">
+      <section class="grid three">
         <article class="card reveal" data-delay="1">
           <img class="thumb" src="${PANEL_1_DATA_URL}" alt="Design preview panel 1" />
-          <h3>Platform Modules</h3>
+          <h3>What You Get</h3>
           <ul>
             <li>Account registration and authentication APIs</li>
             <li>Project deployment and storage tracking</li>
@@ -333,11 +326,30 @@ export function renderFrontend(pathname, apiOrigin) {
             <li>Support tickets and admin reporting endpoints</li>
           </ul>
         </article>
-        <article class="card accent reveal" data-delay="2">
+        <article class="card reveal" data-delay="2">
           <img class="thumb" src="${PANEL_2_DATA_URL}" alt="Design preview panel 2" />
-          <h3>Control Surfaces</h3>
-          <p>Client portal, API endpoints, and admin views are available under one routed Worker deployment.</p>
-          <p style="margin-top:12px;"><a class="cta" href="/portal/register">Open Portal</a></p>
+          <h3>How We Work</h3>
+          <p><strong>1.</strong> Discovery and scope</p>
+          <p><strong>2.</strong> Design and build</p>
+          <p><strong>3.</strong> Deploy and handover</p>
+        </article>
+        <article class="card accent reveal" data-delay="3">
+          <img class="thumb" src="${PANEL_3_DATA_URL}" alt="Design preview panel 3" />
+          <h3>Need Clarity First?</h3>
+          <p>Tell us your goal, timeline, and stack preference. We’ll map the cleanest build path.</p>
+          <p style="margin-top:12px;"><a class="cta" href="/contact">Book Discovery</a></p>
+        </article>
+      </section>
+      <section class="grid two" style="margin-top:14px;">
+        <article class="card reveal">
+          <h3>Frequently Asked</h3>
+          <p><strong>Can we use our own domain?</strong> Yes, domains are mapped through your Cloudflare zone.</p>
+          <p><strong>Can your team handle support flows?</strong> Yes, ticketing and admin controls are built in.</p>
+        </article>
+        <article class="card reveal" data-delay="1">
+          <h3>Primary Next Step</h3>
+          <p>Create an account and submit your first project scope from the portal.</p>
+          <p style="margin-top:12px;"><a class="cta" href="/portal/register">Create Account</a></p>
         </article>
       </section>`
     });
@@ -707,7 +719,7 @@ export function renderDesignerLanding(apiOrigin) {
       url('${LANDING_ART_DATA_URL}') center/cover no-repeat;">
       <img src="${BRAND_LOGO_RIGHT_DATA_URL}" alt="Ubani studio logo" style="width:210px;max-width:56%;display:block;margin-bottom:14px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));" />
       <h1>WEB DESIGN STUDIO<br/>FOR SOUTH AFRICA</h1>
-      <p>Design systems, branded websites, and production-ready build pipelines for growing businesses.</p>
+      <p>Web design, frontend build, and deployment support for brands that need a serious digital presence.</p>
       <p>
         <span class="pill">Branding</span>
         <span class="pill">Web Design</span>
@@ -716,9 +728,13 @@ export function renderDesignerLanding(apiOrigin) {
       <p style="margin-top:12px;"><a class="cta" href="${apiOrigin}/portal/register">Start a Project</a></p>
     </section>
     <section class="grid three">
-      <article class="card reveal" data-delay="1"><img class="thumb" src="${PANEL_1_DATA_URL}" alt="Studio work sample 1" /><h3>Identity + Layout</h3><p>Brand direction, typography systems, and conversion-focused page structure.</p></article>
-      <article class="card reveal" data-delay="2"><img class="thumb" src="${PANEL_2_DATA_URL}" alt="Studio work sample 2" /><h3>Build + Integrate</h3><p>Frontend implementation, CMS/API integration, and deployment-ready handoff.</p></article>
-      <article class="card reveal" data-delay="3"><img class="thumb" src="${PANEL_3_DATA_URL}" alt="Studio work sample 3" /><h3>Operate + Iterate</h3><p>Analytics-informed updates, SEO refinements, and ongoing improvements.</p></article>
+      <article class="card reveal" data-delay="1"><img class="thumb" src="${PANEL_1_DATA_URL}" alt="Studio work sample 1" /><h3>Design System</h3><p>Layout hierarchy, typography, and component language aligned to your brand.</p></article>
+      <article class="card reveal" data-delay="2"><img class="thumb" src="${PANEL_2_DATA_URL}" alt="Studio work sample 2" /><h3>Build Delivery</h3><p>Production-ready frontend build with clear asset structure and deployment paths.</p></article>
+      <article class="card reveal" data-delay="3"><img class="thumb" src="${PANEL_3_DATA_URL}" alt="Studio work sample 3" /><h3>Post-Launch</h3><p>Iteration support for content updates, performance tuning, and feature refinement.</p></article>
+    </section>
+    <section class="grid two" style="margin-top:14px;">
+      <article class="card reveal"><h3>FAQ</h3><p><strong>Do you redesign existing sites?</strong> Yes, we can work from a live or legacy codebase.</p><p><strong>Can design and hosting be bundled?</strong> Yes, this studio flow is connected to the hosting platform.</p></article>
+      <article class="card reveal" data-delay="1"><h3>Start Here</h3><p>Open the portal, add your scope, and we’ll move your project into the design/build pipeline.</p><p style="margin-top:12px;"><a class="cta" href="${apiOrigin}/portal/register">Open Portal</a></p></article>
     </section>`
   });
 }
