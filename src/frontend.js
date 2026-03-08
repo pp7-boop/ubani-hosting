@@ -187,6 +187,42 @@ function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
       .profile-raw pre {
         margin-top: 8px;
       }
+      .stack-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 9px;
+      }
+      .stack-list li {
+        border: 1px solid rgba(145, 176, 235, 0.24);
+        background: rgba(11, 27, 50, 0.74);
+        border-radius: 10px;
+        padding: 10px;
+      }
+      .inline-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .inline-meta span {
+        color: #9ab3df;
+        font-size: 0.78rem;
+      }
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(145, 176, 235, 0.3);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .status-chip.paid { color: #86efac; border-color: rgba(74, 222, 128, 0.35); }
+      .status-chip.pending { color: #fcd34d; border-color: rgba(250, 204, 21, 0.35); }
+      .status-chip.failed { color: #fca5a5; border-color: rgba(248, 113, 113, 0.35); }
 
       .pill {
         display: inline-block;
@@ -379,6 +415,28 @@ const setStatus = (id, msg, isError = false) => {
   el.textContent = msg;
   el.classList.toggle("error", !!isError);
 };
+const escapeHtml = (value) => String(value ?? "")
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;")
+  .replaceAll("'", "&#39;");
+const formatDateTime = (input) => {
+  if (!input) return "Not available";
+  const normalized = String(input).replace(" ", "T");
+  const maybeDate = new Date(normalized.endsWith("Z") ? normalized : normalized + "Z");
+  if (Number.isNaN(maybeDate.getTime())) return String(input);
+  return maybeDate.toLocaleString();
+};
+const centsToRand = (value) => {
+  const numeric = Number(value || 0);
+  return "R" + (numeric / 100).toFixed(2);
+};
+const statusChip = (value) => {
+  const raw = String(value || "pending").toLowerCase();
+  const allowed = raw === "paid" || raw === "failed" ? raw : "pending";
+  return "<span class=\\"status-chip " + allowed + "\\">" + escapeHtml(raw) + "</span>";
+};
 `;
 
 export function renderFrontend(pathname, apiOrigin) {
@@ -518,19 +576,6 @@ export function renderFrontend(pathname, apiOrigin) {
         </article>
       </section>`,
       script: `${portalScript}
-const escapeHtml = (value) => String(value ?? "")
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;")
-  .replaceAll("'", "&#39;");
-const formatCreatedAt = (input) => {
-  if (!input) return "Not available";
-  const normalized = String(input).replace(" ", "T");
-  const maybeDate = new Date(normalized.endsWith("Z") ? normalized : normalized + "Z");
-  if (Number.isNaN(maybeDate.getTime())) return String(input);
-  return maybeDate.toLocaleString();
-};
 const renderProfile = (payload) => {
   const user = payload && payload.user ? payload.user : {};
   return \`
@@ -549,7 +594,7 @@ const renderProfile = (payload) => {
       </div>
       <div class="profile-item">
         <span class="label">Created</span>
-        <div class="value">\${escapeHtml(formatCreatedAt(user.created_at))}</div>
+        <div class="value">\${escapeHtml(formatDateTime(user.created_at))}</div>
       </div>
     </div>
     <details class="profile-raw">
@@ -659,10 +704,32 @@ document.getElementById("registerBtn").onclick = async () => {
         <article class="card reveal" data-delay="1">
           <h3>Invoices</h3>
           <button id="loadInvoices">Refresh</button>
-          <pre id="invoicesData">No data loaded.</pre>
+          <div id="invoicesData" class="profile-output">
+            <p class="profile-placeholder">No invoice data loaded yet.</p>
+          </div>
         </article>
       </section>`,
       script: `${portalScript}
+const renderInvoices = (payload) => {
+  const invoices = Array.isArray(payload && payload.invoices) ? payload.invoices : [];
+  if (!invoices.length) return '<p class="profile-placeholder">No invoices found for this account.</p>';
+  return \`
+    <ul class="stack-list">
+      \${invoices.map((invoice) => \`
+        <li>
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+            <strong>\${escapeHtml(centsToRand(invoice.amount))}</strong>
+            \${statusChip(invoice.status)}
+          </div>
+          <div class="inline-meta">
+            <span>ID: \${escapeHtml(invoice.id)}</span>
+            <span>Created: \${escapeHtml(formatDateTime(invoice.created_at))}</span>
+          </div>
+        </li>
+      \`).join("")}
+    </ul>
+  \`;
+};
 document.getElementById("checkoutBtn").onclick = async () => {
   try {
     setStatus("checkoutStatus", "Creating...");
@@ -670,14 +737,15 @@ document.getElementById("checkoutBtn").onclick = async () => {
     const data = await api("/api/invoice/checkout", { method: "POST", body: JSON.stringify({ amount }) }, true);
     if (data.checkoutUrl) window.open(data.checkoutUrl, "_blank", "noopener,noreferrer");
     setStatus("checkoutStatus", "Invoice " + data.invoiceId + " created.");
+    document.getElementById("loadInvoices").click();
   } catch (error) { setStatus("checkoutStatus", error.message, true); }
 };
 document.getElementById("loadInvoices").onclick = async () => {
   try {
     const data = await api("/api/invoices", {}, true);
-    document.getElementById("invoicesData").textContent = JSON.stringify(data, null, 2);
+    document.getElementById("invoicesData").innerHTML = renderInvoices(data);
   } catch (error) {
-    document.getElementById("invoicesData").textContent = error.message;
+    document.getElementById("invoicesData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
   }
 };`
     });
@@ -689,20 +757,67 @@ document.getElementById("loadInvoices").onclick = async () => {
       nav: portalNav(),
       apiOrigin,
       body: `
-      <section class="hero reveal"><h1>Projects</h1><p>Inspect all deployments linked to your account.</p></section>
+      <section class="hero reveal"><h1>Projects</h1><p>Create deployments and inspect all projects linked to your account.</p></section>
       <section class="grid two">
         <article class="card reveal">
+          <h3>Create Project</h3>
+          <div class="row"><label>Domain</label><input id="projectDomain" placeholder="myproject.co.za" /></div>
+          <button id="createProjectBtn">Create Project</button>
+          <div id="createProjectStatus" class="status"></div>
+          <p style="margin-top:8px;">Creates a new deployment with a starter <code>index.html</code> file and stores it in your account.</p>
+        </article>
+        <article class="card reveal" data-delay="1">
+          <h3>Your Deployments</h3>
           <button id="loadProjects">Load Projects</button>
-          <pre id="projectsData">No data loaded.</pre>
+          <div id="projectsData" class="profile-output">
+            <p class="profile-placeholder">No projects loaded yet.</p>
+          </div>
         </article>
       </section>`,
       script: `${portalScript}
+const renderProjects = (payload) => {
+  const projects = Array.isArray(payload && payload.projects) ? payload.projects : [];
+  if (!projects.length) return '<p class="profile-placeholder">No deployments yet. Use "Create Project" to start.</p>';
+  return \`
+    <ul class="stack-list">
+      \${projects.map((project) => \`
+        <li>
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+            <strong>\${escapeHtml(project.domain || "Untitled domain")}</strong>
+            <span>\${escapeHtml(String(project.storage || 0))} bytes</span>
+          </div>
+          <div class="inline-meta">
+            <span>Project ID: \${escapeHtml(project.id)}</span>
+            <span>Created: \${escapeHtml(formatDateTime(project.created_at))}</span>
+          </div>
+        </li>
+      \`).join("")}
+    </ul>
+  \`;
+};
+document.getElementById("createProjectBtn").onclick = async () => {
+  try {
+    setStatus("createProjectStatus", "Creating project...");
+    const domain = document.getElementById("projectDomain").value.trim() || ("project-" + Date.now() + ".co.za");
+    const data = await api("/api/deploy", {
+      method: "POST",
+      body: JSON.stringify({
+        domain,
+        files: [{ name: "index.html", contentType: "text/html", content: "<h1>Project created and live</h1>" }]
+      })
+    }, true);
+    setStatus("createProjectStatus", "Created and deployed. Project ID: " + data.projectId);
+    document.getElementById("loadProjects").click();
+  } catch (error) {
+    setStatus("createProjectStatus", error.message, true);
+  }
+};
 document.getElementById("loadProjects").onclick = async () => {
   try {
     const data = await api("/api/projects", {}, true);
-    document.getElementById("projectsData").textContent = JSON.stringify(data, null, 2);
+    document.getElementById("projectsData").innerHTML = renderProjects(data);
   } catch (error) {
-    document.getElementById("projectsData").textContent = error.message;
+    document.getElementById("projectsData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
   }
 };`
     });
@@ -723,24 +838,47 @@ document.getElementById("loadProjects").onclick = async () => {
         </article>
         <article class="card reveal" data-delay="1">
           <button id="loadTicketsBtn">Load My Tickets</button>
-          <pre id="ticketsData">No data loaded.</pre>
+          <div id="ticketsData" class="profile-output">
+            <p class="profile-placeholder">No ticket data loaded yet.</p>
+          </div>
         </article>
       </section>`,
       script: `${portalScript}
+const renderTickets = (payload) => {
+  const tickets = Array.isArray(payload && payload.tickets) ? payload.tickets : [];
+  if (!tickets.length) return '<p class="profile-placeholder">No support tickets yet.</p>';
+  return \`
+    <ul class="stack-list">
+      \${tickets.map((ticket) => \`
+        <li>
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+            <strong>\${escapeHtml(ticket.subject || "Untitled ticket")}</strong>
+            \${statusChip(ticket.status)}
+          </div>
+          <div class="inline-meta">
+            <span>Ticket ID: \${escapeHtml(ticket.id)}</span>
+            <span>Created: \${escapeHtml(formatDateTime(ticket.created_at))}</span>
+          </div>
+        </li>
+      \`).join("")}
+    </ul>
+  \`;
+};
 document.getElementById("createTicketBtn").onclick = async () => {
   try {
     setStatus("ticketStatus", "Submitting...");
     const subject = document.getElementById("subject").value.trim();
     const data = await api("/api/support/tickets", { method: "POST", body: JSON.stringify({ subject }) }, true);
     setStatus("ticketStatus", "Ticket created: " + data.ticket.id);
+    document.getElementById("loadTicketsBtn").click();
   } catch (error) { setStatus("ticketStatus", error.message, true); }
 };
 document.getElementById("loadTicketsBtn").onclick = async () => {
   try {
     const data = await api("/api/support/tickets", {}, true);
-    document.getElementById("ticketsData").textContent = JSON.stringify(data, null, 2);
+    document.getElementById("ticketsData").innerHTML = renderTickets(data);
   } catch (error) {
-    document.getElementById("ticketsData").textContent = error.message;
+    document.getElementById("ticketsData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
   }
 };`
     });
@@ -757,10 +895,18 @@ document.getElementById("loadTicketsBtn").onclick = async () => {
         <article class="card reveal">
           <div class="row"><label>Admin API Key</label><input id="adminKey" type="password" /></div>
           <button id="loadSummaryBtn">Load Summary</button>
-          <pre id="summaryData">No data loaded.</pre>
+          <div id="summaryData" class="profile-output">
+            <p class="profile-placeholder">No summary data loaded yet.</p>
+          </div>
         </article>
       </section>`,
       script: `
+const escapeHtml = (value) => String(value ?? "")
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;")
+  .replaceAll("'", "&#39;");
 const adminApi = async (path) => {
   const key = document.getElementById("adminKey").value.trim();
   const response = await fetch(path, { headers: { "x-admin-key": key } });
@@ -771,9 +917,16 @@ const adminApi = async (path) => {
 document.getElementById("loadSummaryBtn").onclick = async () => {
   try {
     const data = await adminApi("/api/admin/summary");
-    document.getElementById("summaryData").textContent = JSON.stringify(data, null, 2);
+    document.getElementById("summaryData").innerHTML = \`
+      <div class="profile-grid">
+        <div class="profile-item"><span class="label">Users</span><div class="value">\${escapeHtml(data.users)}</div></div>
+        <div class="profile-item"><span class="label">Projects</span><div class="value">\${escapeHtml(data.projects)}</div></div>
+        <div class="profile-item"><span class="label">Invoices</span><div class="value">\${escapeHtml(data.invoices)}</div></div>
+        <div class="profile-item"><span class="label">Paid Revenue</span><div class="value">R\${escapeHtml((Number(data.paidRevenueCents || 0) / 100).toFixed(2))}</div></div>
+      </div>
+    \`;
   } catch (error) {
-    document.getElementById("summaryData").textContent = error.message;
+    document.getElementById("summaryData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
   }
 };`
     });
