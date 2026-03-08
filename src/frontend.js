@@ -943,19 +943,52 @@ document.getElementById("loadSummaryBtn").onclick = async () => {
         <article class="card reveal">
           <div class="row"><label>Admin API Key</label><input id="adminKey" type="password" /></div>
           <button id="loadUsersBtn">Load Users</button>
-          <pre id="usersData">No data loaded.</pre>
+          <div id="usersData" class="profile-output">
+            <p class="profile-placeholder">No users loaded yet.</p>
+          </div>
         </article>
       </section>`,
       script: `
+const escapeHtml = (value) => String(value ?? "")
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;")
+  .replaceAll("'", "&#39;");
+const formatDateTime = (input) => {
+  if (!input) return "Not available";
+  const normalized = String(input).replace(" ", "T");
+  const maybeDate = new Date(normalized.endsWith("Z") ? normalized : normalized + "Z");
+  if (Number.isNaN(maybeDate.getTime())) return String(input);
+  return maybeDate.toLocaleString();
+};
 document.getElementById("loadUsersBtn").onclick = async () => {
   try {
     const key = document.getElementById("adminKey").value.trim();
     const response = await fetch("/api/admin/users", { headers: { "x-admin-key": key } });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
-    document.getElementById("usersData").textContent = JSON.stringify(data, null, 2);
+    const users = Array.isArray(data.users) ? data.users : [];
+    if (!users.length) {
+      document.getElementById("usersData").innerHTML = '<p class="profile-placeholder">No users found.</p>';
+      return;
+    }
+    document.getElementById("usersData").innerHTML = \`
+      <ul class="stack-list">
+        \${users.map((user) => \`
+          <li>
+            <strong>\${escapeHtml(user.email || "No email")}</strong>
+            <div class="inline-meta">
+              <span>ID: \${escapeHtml(user.id)}</span>
+              <span>Credit: \${escapeHtml(String(user.credit ?? 0))}</span>
+              <span>Created: \${escapeHtml(formatDateTime(user.created_at))}</span>
+            </div>
+          </li>
+        \`).join("")}
+      </ul>
+    \`;
   } catch (error) {
-    document.getElementById("usersData").textContent = error.message;
+    document.getElementById("usersData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
   }
 };`
     });
@@ -972,19 +1005,62 @@ document.getElementById("loadUsersBtn").onclick = async () => {
         <article class="card reveal">
           <div class="row"><label>Admin API Key</label><input id="adminKey" type="password" /></div>
           <button id="loadRevenueBtn">Load Revenue</button>
-          <pre id="revenueData">No data loaded.</pre>
+          <div id="revenueData" class="profile-output">
+            <p class="profile-placeholder">No revenue data loaded yet.</p>
+          </div>
         </article>
       </section>`,
       script: `
+const escapeHtml = (value) => String(value ?? "")
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;")
+  .replaceAll("'", "&#39;");
+const formatDateTime = (input) => {
+  if (!input) return "Not available";
+  const normalized = String(input).replace(" ", "T");
+  const maybeDate = new Date(normalized.endsWith("Z") ? normalized : normalized + "Z");
+  if (Number.isNaN(maybeDate.getTime())) return String(input);
+  return maybeDate.toLocaleString();
+};
 document.getElementById("loadRevenueBtn").onclick = async () => {
   try {
     const key = document.getElementById("adminKey").value.trim();
     const response = await fetch("/api/admin/revenue", { headers: { "x-admin-key": key } });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
-    document.getElementById("revenueData").textContent = JSON.stringify(data, null, 2);
+    const totals = Array.isArray(data.totals) ? data.totals : [];
+    const latestPaid = Array.isArray(data.latestPaid) ? data.latestPaid : [];
+    document.getElementById("revenueData").innerHTML = \`
+      <h4 style="margin:0 0 8px;">Status Totals</h4>
+      <ul class="stack-list" style="margin-bottom:10px;">
+        \${totals.length ? totals.map((item) => \`
+          <li>
+            <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+              <strong>\${escapeHtml(item.status || "unknown")}</strong>
+              <span>R\${escapeHtml((Number(item.cents || 0) / 100).toFixed(2))}</span>
+            </div>
+            <div class="inline-meta"><span>Invoices: \${escapeHtml(item.count)}</span></div>
+          </li>
+        \`).join("") : '<li><span class="profile-placeholder">No totals available.</span></li>'}
+      </ul>
+      <h4 style="margin:0 0 8px;">Latest Paid Invoices</h4>
+      <ul class="stack-list">
+        \${latestPaid.length ? latestPaid.map((invoice) => \`
+          <li>
+            <strong>\${escapeHtml(invoice.id)}</strong>
+            <div class="inline-meta">
+              <span>User: \${escapeHtml(invoice.user_id)}</span>
+              <span>Amount: R\${escapeHtml((Number(invoice.amount || 0) / 100).toFixed(2))}</span>
+              <span>Created: \${escapeHtml(formatDateTime(invoice.created_at))}</span>
+            </div>
+          </li>
+        \`).join("") : '<li><span class="profile-placeholder">No paid invoices yet.</span></li>'}
+      </ul>
+    \`;
   } catch (error) {
-    document.getElementById("revenueData").textContent = error.message;
+    document.getElementById("revenueData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
   }
 };`
     });
