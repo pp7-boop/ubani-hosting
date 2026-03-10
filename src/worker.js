@@ -37,14 +37,35 @@ function json(data, init = {}) {
   });
 }
 
-function html(content, init = {}) {
+function buildCsp(apiOrigin) {
+  // Allow 'self' plus the configured API origin (handles both dev and prod)
+  const connectSrc = ["'self'", "https://cloudflareinsights.com", "https://*.cloudflareinsights.com"];
+  if (apiOrigin && !connectSrc.includes(apiOrigin)) connectSrc.push(apiOrigin);
+  // Always include both localhost variants for dev
+  if (!connectSrc.some(s => s.includes("localhost"))) {
+    connectSrc.push("http://localhost:8787", "https://localhost:8787");
+  }
+  return [
+    "default-src 'self'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src https://fonts.gstatic.com",
+    "img-src 'self' https: data:",
+    "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
+    `connect-src ${connectSrc.join(" ")}`,
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'"
+  ].join("; ");
+}
+
+function html(content, init = {}, apiOrigin = "") {
   return new Response(content, {
     ...init,
     headers: {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "public, max-age=120",
       ...SECURITY_HEADERS,
-      "content-security-policy": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' https:; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; connect-src 'self' https://api.ubanihosting.co.za https://cloudflareinsights.com https://*.cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+      "content-security-policy": buildCsp(apiOrigin),
       ...(init.headers || {})
     }
   });
@@ -1205,17 +1226,19 @@ export default {
       }
 
       if (request.method === "GET" && url.pathname === "/") {
+        const apiOrigin = getCanonicalApiOrigin(request, env);
         const homepage = host === "www.ubanihosting.co.za"
-          ? renderDesignerLanding(getCanonicalApiOrigin(request, env))
-          : renderFrontend(url.pathname, getCanonicalApiOrigin(request, env));
-        const response = html(homepage);
+          ? renderDesignerLanding(apiOrigin)
+          : renderFrontend(url.pathname, apiOrigin);
+        const response = html(homepage, {}, apiOrigin);
         return isHead ? headFromResponse(response) : response;
       }
 
       if (request.method === "GET" || isHead) {
-        const frontend = renderFrontend(url.pathname, getCanonicalApiOrigin(request, env));
+        const apiOrigin = getCanonicalApiOrigin(request, env);
+        const frontend = renderFrontend(url.pathname, apiOrigin);
         if (frontend) {
-          const response = html(frontend);
+          const response = html(frontend, {}, apiOrigin);
           return isHead ? headFromResponse(response) : response;
         }
       }
