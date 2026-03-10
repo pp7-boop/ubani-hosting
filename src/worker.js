@@ -1360,6 +1360,18 @@ export default {
         if (adminError) return adminError;
         return await adminRevenue(env);
       }
+      if (request.method === "POST" && url.pathname === "/api/admin/migrate-fix") {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        const db = getTursoClient(env);
+        try {
+          await db.execute("ALTER TABLE tickets ADD COLUMN updated_at TEXT DEFAULT '1970-01-01'");
+          return corsJson({ ok: true, message: "updated_at column added" });
+        } catch(e) {
+          return corsJson({ ok: false, error: String(e?.message || e) });
+        }
+      }
+
       if (request.method === "POST" && url.pathname === "/api/admin/migrate") {
         const adminError = requireAdmin(request, env);
         if (adminError) return adminError;
