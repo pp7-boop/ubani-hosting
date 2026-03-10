@@ -1069,7 +1069,6 @@ function pageLogin(apiOrigin) {
       const btn = document.getElementById('loginBtn');
       btn.innerHTML = '<span class="spinner"></span> Signing in...';
       btn.disabled = true;
-      clearAlert && clearAlert('loginAlert');
       try {
         const email    = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
