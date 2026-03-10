@@ -420,7 +420,43 @@ const CSS = `
   .fade-up-3 { animation-delay: 0.15s; }
   .fade-up-4 { animation-delay: 0.20s; }
 
-  /* ── MARKETING FOOTER ─────────────────────── */
+  /* ── PROFILE ──────────────────────────────── */
+  .profile-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #9333ea);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .plan-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    background: rgba(249,115,22,0.15); color: var(--accent); border: 1px solid rgba(249,115,22,0.3);
+  }
+
+  /* ── TICKET THREAD ────────────────────────── */
+  .thread { display: flex; flex-direction: column; gap: 12px; padding: 20px; }
+  .thread-msg {
+    padding: 14px 16px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--bg2);
+    max-width: 90%;
+  }
+  .thread-msg.from-admin {
+    border-color: rgba(249,115,22,0.3);
+    background: rgba(249,115,22,0.06);
+    align-self: flex-end;
+  }
+  .thread-msg.from-client { align-self: flex-start; }
+  .thread-msg-meta { font-size: 11px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  .thread-msg p { font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+
+  /* ── NOTIFICATION DOT ─────────────────────── */
+  .notif-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); margin-left: 6px; vertical-align: middle;
+    animation: pulse 2s infinite;
+  }
+
   .mkt-footer {
     border-top: 1px solid var(--border);
     padding: 40px 24px;
@@ -459,9 +495,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const avatar = document.getElementById('userAvatar');
     const email  = document.getElementById('userEmail');
     const plan   = document.getElementById('userPlan');
-    if (avatar) avatar.textContent = (u.email || '?')[0].toUpperCase();
-    if (email)  email.textContent  = u.email || '';
-    if (plan)   plan.textContent   = u.plan  || 'Free Plan';
+    if (avatar) avatar.textContent = (u.name || u.email || '?')[0].toUpperCase();
+    if (email)  email.textContent  = u.name || u.email || '';
+    if (plan)   plan.textContent   = (u.plan ? u.plan.charAt(0).toUpperCase() + u.plan.slice(1) : 'Free') + ' Plan';
   }
   // Highlight active nav link
   const current = window.location.pathname;
@@ -603,6 +639,7 @@ function portalShell({ title, body, script = '', path = '', apiOrigin = '' }) {
     { href: '/portal/projects',  icon: '◈', label: 'Projects'  },
     { href: '/portal/billing',   icon: '◎', label: 'Billing'   },
     { href: '/portal/support',   icon: '◷', label: 'Support'   },
+    { href: '/portal/profile',   icon: '◉', label: 'Profile'   },
   ];
 
   return `<!doctype html>
@@ -1362,50 +1399,111 @@ function pagePortalSupport(apiOrigin) {
     title: 'Support',
     path: '/portal/support',
     body: `
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
-      <div class="card fade-up">
-        <div class="card-header"><h2>New Ticket</h2><p>Our team typically responds within 24 hours</p></div>
-        <div class="card-body">
-          <div class="form-group">
-            <label class="form-label">Subject</label>
-            <input id="ticketSubject" class="form-input" placeholder="Brief description of your issue"/>
+    <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;min-height:500px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <button class="btn btn-primary" onclick="showNewTicket()" style="width:100%;justify-content:center">+ New Ticket</button>
+        <div class="card" style="flex:1">
+          <div class="card-header"><h2>My Tickets</h2></div>
+          <div id="ticketListPanel" style="overflow-y:auto;max-height:520px">
+            <div class="empty-state"><div class="spinner"></div></div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Message</label>
-            <textarea id="ticketMessage" class="form-input" placeholder="Describe your issue in detail..."></textarea>
-          </div>
-          <button class="btn btn-primary" onclick="submitTicket()" id="ticketBtn" style="width:100%;justify-content:center;padding:10px">
-            Submit Ticket
-          </button>
-          <div id="ticketAlert" class="alert" style="margin-top:10px"></div>
         </div>
       </div>
-
-      <div class="card fade-up fade-up-1">
-        <div class="card-header"><h2>My Tickets</h2><p>Track your open &amp; closed requests</p></div>
-        <div id="ticketList">
-          <div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading...</p></div>
+      <div class="card" id="threadPanel">
+        <div class="empty-state" style="padding:60px 24px">
+          <div class="empty-icon">◷</div>
+          <h3>Select a ticket</h3>
+          <p>Choose a ticket from the left, or create a new one.</p>
         </div>
       </div>
     </div>`,
     script: `
-    const submitTicket = async () => {
-      const btn = document.getElementById('ticketBtn');
-      btn.innerHTML = '<span class="spinner"></span> Submitting...';
+    let activeTicketId = null;
+
+    const showNewTicket = () => {
+      activeTicketId = null;
+      document.querySelectorAll('.ticket-item').forEach(el => el.style.background = '');
+      document.getElementById('threadPanel').innerHTML = \`
+        <div class="card-header"><h2>New Support Ticket</h2><p>Our team typically responds within 24 hours</p></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Subject</label>
+            <input id="newSubject" class="form-input" placeholder="Brief description of your issue"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea id="newMessage" class="form-input" placeholder="Describe your issue in detail..." style="min-height:140px"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="submitNewTicket()" id="submitTicketBtn" style="padding:10px 20px">Submit Ticket</button>
+          <div id="newTicketAlert" class="alert" style="margin-top:10px"></div>
+        </div>
+      \`;
+    };
+
+    const submitNewTicket = async () => {
+      const btn = document.getElementById('submitTicketBtn');
+      btn.innerHTML = '<span class="spinner"></span>';
       btn.disabled = true;
       try {
-        const subject = document.getElementById('ticketSubject').value.trim();
-        const message = document.getElementById('ticketMessage').value.trim();
+        const subject = document.getElementById('newSubject').value.trim();
+        const message = document.getElementById('newMessage').value.trim();
         if (!subject) throw new Error('Subject is required');
-        await api('/api/support/tickets', { method:'POST', body: JSON.stringify({ subject, message }) });
-        document.getElementById('ticketSubject').value = '';
-        document.getElementById('ticketMessage').value = '';
-        showAlert('ticketAlert', 'Ticket submitted! We will respond shortly.', 'success');
+        const data = await api('/api/support/tickets', { method:'POST', body: JSON.stringify({ subject, message }) });
+        await loadTickets();
+        openTicket(data.ticket.id);
+      } catch(err) {
+        showAlert('newTicketAlert', err.message, 'error');
+        btn.innerHTML = 'Submit Ticket';
+        btn.disabled = false;
+      }
+    };
+
+    const openTicket = async (ticketId) => {
+      activeTicketId = ticketId;
+      document.querySelectorAll('.ticket-item').forEach(el => {
+        el.style.background = el.dataset.id === ticketId ? 'var(--bg3)' : '';
+      });
+      document.getElementById('threadPanel').innerHTML = '<div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading...</p></div>';
+      try {
+        const data = await api('/api/support/tickets/' + ticketId);
+        const ticket = data.ticket;
+        const messages = data.messages || [];
+        const isClosed = ticket.status === 'closed';
+        document.getElementById('threadPanel').innerHTML =
+          '<div class="card-header"><div><h2>' + esc(ticket.subject) + '</h2>' +
+          '<p style="margin-top:4px">Opened ' + fmtDate(ticket.created_at) + ' &nbsp;' + statusBadge(ticket.status) + '</p></div></div>' +
+          '<div class="thread" id="messageThread">' +
+          (messages.length ? messages.map(m =>
+            '<div class="thread-msg ' + (m.author_role === 'admin' ? 'from-admin' : 'from-client') + '">' +
+            '<div class="thread-msg-meta">' + (m.author_role === 'admin' ? '🟠 Ubani Support' : '◉ You') + ' · ' + fmtDate(m.created_at) + '</div>' +
+            '<p>' + esc(m.body) + '</p></div>'
+          ).join('') : '<p style="color:var(--muted);font-size:13px;padding:8px 0">No messages yet.</p>') +
+          '</div>' +
+          (!isClosed
+            ? '<div style="padding:16px;border-top:1px solid var(--border)">' +
+              '<textarea id="replyText" class="form-input" placeholder="Write a reply..." style="min-height:80px;margin-bottom:10px"></textarea>' +
+              '<button class="btn btn-primary" onclick="sendReply(\'' + esc(ticketId) + '\')" id="replyBtn">Send Reply</button>' +
+              '<div id="replyAlert" class="alert" style="margin-top:8px"></div></div>'
+            : '<div style="padding:16px;color:var(--muted);font-size:13px;border-top:1px solid var(--border)">This ticket is closed.</div>'
+          );
+      } catch(err) {
+        document.getElementById('threadPanel').innerHTML = '<div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
+      }
+    };
+
+    const sendReply = async (ticketId) => {
+      const btn = document.getElementById('replyBtn');
+      btn.innerHTML = '<span class="spinner"></span>';
+      btn.disabled = true;
+      try {
+        const message = document.getElementById('replyText').value.trim();
+        if (!message) throw new Error('Message is required');
+        await api('/api/support/tickets/' + ticketId + '/reply', { method:'POST', body: JSON.stringify({ message }) });
+        openTicket(ticketId);
         loadTickets();
       } catch(err) {
-        showAlert('ticketAlert', err.message, 'error');
-      } finally {
-        btn.innerHTML = 'Submit Ticket';
+        showAlert('replyAlert', err.message, 'error');
+        btn.innerHTML = 'Send Reply';
         btn.disabled = false;
       }
     };
@@ -1415,19 +1513,136 @@ function pagePortalSupport(apiOrigin) {
         const data = await api('/api/support/tickets');
         const tickets = data.tickets || [];
         if (!tickets.length) {
-          document.getElementById('ticketList').innerHTML = '<div class="empty-state"><div class="empty-icon">◷</div><h3>No tickets yet</h3><p>Submit a ticket if you need help</p></div>';
+          document.getElementById('ticketListPanel').innerHTML = '<div class="empty-state" style="padding:24px 16px"><p>No tickets yet.</p></div>';
           return;
         }
-        document.getElementById('ticketList').innerHTML =
-          '<table class="data-table"><thead><tr><th>Subject</th><th>Status</th><th>Date</th></tr></thead><tbody>' +
-          tickets.map(t => '<tr><td>' + esc(t.subject) + '</td><td>' + statusBadge(t.status) + '</td><td>' + fmtDate(t.created_at) + '</td></tr>').join('') +
-          '</tbody></table>';
+        document.getElementById('ticketListPanel').innerHTML = tickets.map(t =>
+          '<div class="ticket-item" data-id="' + esc(t.id) + '" onclick="openTicket(\'' + esc(t.id) + '\')"' +
+          ' style="padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.12s">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:3px">' +
+          '<strong style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">' + esc(t.subject) + '</strong>' +
+          statusBadge(t.status) + '</div>' +
+          '<div style="font-size:11px;color:var(--muted)">' + fmtDate(t.updated_at || t.created_at) + '</div></div>'
+        ).join('');
       } catch(err) {
-        document.getElementById('ticketList').innerHTML = '<div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
+        document.getElementById('ticketListPanel').innerHTML = '<div style="padding:12px"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
       }
     };
 
     window.addEventListener('DOMContentLoaded', loadTickets);
+    `
+  });
+}
+
+function pagePortalProfile(apiOrigin) {
+  return portalShell({
+    apiOrigin,
+    title: 'Profile',
+    path: '/portal/profile',
+    body: `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+      <div class="card fade-up">
+        <div class="card-header"><h2>Account Details</h2><p>Your personal information</p></div>
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+            <div class="profile-avatar" id="profileAvatar">?</div>
+            <div>
+              <div style="font-size:16px;font-weight:600" id="profileName">Loading...</div>
+              <div style="font-size:13px;color:var(--muted)" id="profileEmail"></div>
+              <div style="margin-top:4px"><span class="plan-pill" id="profilePlan">Free</span></div>
+            </div>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin-bottom:20px"/>
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input id="nameInput" class="form-input" placeholder="Your name"/>
+          </div>
+          <button class="btn btn-primary" onclick="saveProfile()" id="saveBtn" style="padding:9px 20px">Save Changes</button>
+          <div id="profileAlert" class="alert" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <div class="card fade-up fade-up-1">
+        <div class="card-header"><h2>Account Stats</h2><p>Your usage at a glance</p></div>
+        <div class="card-body" id="statsBody">
+          <div class="empty-state" style="padding:20px"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <div class="card fade-up fade-up-2">
+        <div class="card-header"><h2>Upgrade Plan</h2><p>Get more from Ubani</p></div>
+        <div class="card-body">
+          <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Unlock more projects, storage, and priority support by upgrading your plan.</p>
+          <a href="/pricing" class="btn btn-primary" style="width:100%;justify-content:center">View plans →</a>
+        </div>
+      </div>
+    </div>`,
+    script: `
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const [meData, projects, invoices, tickets] = await Promise.all([
+          api('/api/me'),
+          api('/api/projects'),
+          api('/api/invoices'),
+          api('/api/support/tickets')
+        ]);
+        const u = meData.user || {};
+
+        // Update local storage with fresh data
+        _setUser({ ..._getUser(), name: u.name, plan: u.plan });
+
+        document.getElementById('profileAvatar').textContent = (u.name || u.email || '?')[0].toUpperCase();
+        document.getElementById('profileName').textContent   = u.name || '(no name set)';
+        document.getElementById('profileEmail').textContent  = u.email || '';
+        document.getElementById('profilePlan').textContent   = u.plan ? u.plan.charAt(0).toUpperCase() + u.plan.slice(1) : 'Free';
+        document.getElementById('nameInput').value           = u.name || '';
+
+        // Update sidebar too
+        const sAvatar = document.getElementById('userAvatar');
+        const sEmail  = document.getElementById('userEmail');
+        const sPlan   = document.getElementById('userPlan');
+        if (sAvatar) sAvatar.textContent = (u.name || u.email || '?')[0].toUpperCase();
+        if (sEmail)  sEmail.textContent  = u.name || u.email || '';
+        if (sPlan)   sPlan.textContent   = (u.plan ? u.plan.charAt(0).toUpperCase() + u.plan.slice(1) : 'Free') + ' Plan';
+
+        document.getElementById('statsBody').innerHTML =
+          '<div class="stat-grid">' +
+          '<div class="stat-card"><div class="stat-label">Projects</div><div class="stat-value">' + (projects.projects||[]).length + '</div></div>' +
+          '<div class="stat-card"><div class="stat-label">Invoices</div><div class="stat-value">' + (invoices.invoices||[]).length + '</div></div>' +
+          '<div class="stat-card"><div class="stat-label">Tickets</div><div class="stat-value">' + (tickets.tickets||[]).length + '</div></div>' +
+          '<div class="stat-card"><div class="stat-label">Credit</div><div class="stat-value">R' + (Number(u.credit||0)/100).toFixed(2) + '</div></div>' +
+          '<div class="stat-card" style="grid-column:1/-1"><div class="stat-label">Member since</div><div class="stat-value" style="font-size:16px">' + fmtDate(u.created_at) + '</div></div>' +
+          '</div>';
+      } catch(err) {
+        showAlert('profileAlert', err.message, 'error');
+      }
+    });
+
+    const saveProfile = async () => {
+      const btn = document.getElementById('saveBtn');
+      btn.innerHTML = '<span class="spinner"></span>';
+      btn.disabled = true;
+      try {
+        const name = document.getElementById('nameInput').value.trim();
+        if (!name) throw new Error('Name cannot be empty');
+        await api('/api/me', { method:'PATCH', body: JSON.stringify({ name }) });
+        // Update local user cache
+        const u = _getUser() || {};
+        _setUser({ ...u, name });
+        document.getElementById('profileAvatar').textContent = name[0].toUpperCase();
+        document.getElementById('profileName').textContent   = name;
+        const sAvatar = document.getElementById('userAvatar');
+        const sEmail  = document.getElementById('userEmail');
+        if (sAvatar) sAvatar.textContent = name[0].toUpperCase();
+        if (sEmail)  sEmail.textContent  = name;
+        showAlert('profileAlert', 'Profile updated!', 'success');
+      } catch(err) {
+        showAlert('profileAlert', err.message, 'error');
+      } finally {
+        btn.innerHTML = 'Save Changes';
+        btn.disabled = false;
+      }
+    };
     `
   });
 }
@@ -1555,30 +1770,150 @@ function pageAdminTickets(apiOrigin) {
     apiOrigin,
     title: 'Tickets',
     body: `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px" class="fade-up">
-      <div><h2 style="font-size:16px;font-weight:600">Support Tickets</h2><p style="color:var(--muted);font-size:13px">All client requests</p></div>
-      <button class="btn btn-ghost" onclick="loadTickets()">↺ Refresh</button>
-    </div>
-    <div class="card fade-up" id="ticketsContainer">
-      <div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading...</p></div>
+    <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;min-height:540px" class="fade-up">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="loadTickets()" style="flex:1">↺ Refresh</button>
+          <select id="statusFilter" class="form-input" style="width:auto;font-size:12px" onchange="loadTickets()">
+            <option value="">All</option>
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div class="card" style="flex:1">
+          <div class="card-header"><h2>All Tickets</h2><p id="ticketCount">Loading...</p></div>
+          <div id="ticketListPanel" style="overflow-y:auto;max-height:520px">
+            <div class="empty-state"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="adminThreadPanel">
+        <div class="empty-state" style="padding:60px 24px">
+          <div class="empty-icon">◷</div>
+          <h3>Select a ticket</h3>
+          <p>Click a ticket on the left to view the full thread and reply.</p>
+        </div>
+      </div>
     </div>`,
     script: `
+    let activeId = null;
+
+    const openAdminTicket = async (ticketId) => {
+      activeId = ticketId;
+      document.querySelectorAll('.admin-ticket-item').forEach(el => {
+        el.style.background = el.dataset.id === ticketId ? 'var(--bg3)' : '';
+      });
+      document.getElementById('adminThreadPanel').innerHTML = '<div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading thread...</p></div>';
+      try {
+        const data = await adminApi('/api/admin/tickets/' + ticketId);
+        const ticket = data.ticket;
+        const messages = data.messages || [];
+        const isClosed = ticket.status === 'closed';
+        document.getElementById('adminThreadPanel').innerHTML =
+          '<div class="card-header">' +
+          '<div><h2>' + esc(ticket.subject) + '</h2>' +
+          '<p style="margin-top:4px">From: <strong>' + esc(ticket.name || ticket.email || '') + '</strong> (' + esc(ticket.email || '') + ') &nbsp;' + statusBadge(ticket.status) + '</p>' +
+          '<p style="margin-top:2px;font-size:12px;color:var(--muted)">Opened ' + fmtDate(ticket.created_at) + '</p>' +
+          '</div>' +
+          (isClosed
+            ? '<button class="btn btn-ghost" style="font-size:12px" disabled>Closed</button>'
+            : '<button class="btn btn-danger" style="font-size:12px" onclick="closeTicket(\\'' + esc(ticketId) + '\\')">Close Ticket</button>'
+          ) +
+          '</div>' +
+          '<div class="thread" id="adminMsgThread">' +
+          (messages.length ? messages.map(m =>
+            '<div class="thread-msg ' + (m.author_role === 'admin' ? 'from-admin' : 'from-client') + '">' +
+            '<div class="thread-msg-meta">' + (m.author_role === 'admin' ? '🟠 You (Admin)' : '◉ Client') + ' · ' + fmtDate(m.created_at) + '</div>' +
+            '<p>' + esc(m.body) + '</p></div>'
+          ).join('') : '<p style="color:var(--muted);font-size:13px;padding:4px 0">No messages in thread yet.</p>') +
+          '</div>' +
+          (!isClosed
+            ? '<div style="padding:16px;border-top:1px solid var(--border)">' +
+              '<textarea id="adminReplyText" class="form-input" placeholder="Type your reply to the client..." style="min-height:100px;margin-bottom:10px"></textarea>' +
+              '<button class="btn btn-primary" onclick="sendAdminReply(\\'' + esc(ticketId) + '\\')" id="adminReplyBtn">Send Reply &amp; Notify Client</button>' +
+              '<div id="adminReplyAlert" class="alert" style="margin-top:8px"></div></div>'
+            : '<div style="padding:16px;color:var(--muted);font-size:13px;border-top:1px solid var(--border)">This ticket is closed.</div>'
+          );
+      } catch(err) {
+        document.getElementById('adminThreadPanel').innerHTML = '<div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
+      }
+    };
+
+    const sendAdminReply = async (ticketId) => {
+      const btn = document.getElementById('adminReplyBtn');
+      btn.innerHTML = '<span class="spinner"></span> Sending...';
+      btn.disabled = true;
+      try {
+        const message = document.getElementById('adminReplyText').value.trim();
+        if (!message) throw new Error('Reply cannot be empty');
+        await adminApi('/api/admin/tickets/' + ticketId + '/reply', { method: 'POST', body: JSON.stringify({ message }) });
+        showAdminAlert('adminReplyAlert', 'Reply sent — client notified by email ✓', 'success');
+        openAdminTicket(ticketId);
+        loadTickets();
+      } catch(err) {
+        showAdminAlert('adminReplyAlert', err.message, 'error');
+        btn.innerHTML = 'Send Reply & Notify Client';
+        btn.disabled = false;
+      }
+    };
+
+    const closeTicket = async (ticketId) => {
+      if (!confirm('Close this ticket?')) return;
+      try {
+        await adminApi('/api/admin/tickets/' + ticketId + '/close', { method: 'POST' });
+        loadTickets();
+        openAdminTicket(ticketId);
+      } catch(err) { alert(err.message); }
+    };
+
+    const showAdminAlert = (id, msg, type) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = 'alert alert-' + type;
+      el.textContent = msg;
+    };
+
+    const adminApi2 = async (path, options = {}) => {
+      const key = _adminKey();
+      if (!key) throw new Error('No admin key set');
+      const opts = { ...options, headers: { 'x-admin-key': key, 'content-type': 'application/json', ...(options.headers||{}) } };
+      const res = await fetch(APP + path, opts);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
+      return data;
+    };
+    // Override adminApi to support POST
+    const _origAdminApi = adminApi;
+    const adminApi = async (path, options = {}) => {
+      if (options.method) return adminApi2(path, options);
+      return _origAdminApi(path);
+    };
+
     const loadTickets = async () => {
       try {
         const data = await adminApi('/api/admin/tickets');
-        const tickets = data.tickets || [];
+        let tickets = data.tickets || [];
+        const filter = document.getElementById('statusFilter').value;
+        if (filter) tickets = tickets.filter(t => t.status === filter);
+        document.getElementById('ticketCount').textContent = tickets.length + ' ticket' + (tickets.length !== 1 ? 's' : '');
         if (!tickets.length) {
-          document.getElementById('ticketsContainer').innerHTML = '<div class="empty-state"><div class="empty-icon">◷</div><h3>No tickets yet</h3><p>Client support tickets will appear here</p></div>';
+          document.getElementById('ticketListPanel').innerHTML = '<div class="empty-state" style="padding:24px 16px"><p>No tickets found</p></div>';
           return;
         }
-        document.getElementById('ticketsContainer').innerHTML =
-          '<table class="data-table"><thead><tr><th>Subject</th><th>Status</th><th>User</th><th>Date</th></tr></thead><tbody>' +
-          tickets.map(t => '<tr><td><strong>' + esc(t.subject) + '</strong></td><td>' + statusBadge(t.status) + '</td><td class="mono" style="color:var(--muted)">' + esc((t.user_id||'').slice(0,8)) + '…</td><td>' + fmtDate(t.created_at) + '</td></tr>').join('') +
-          '</tbody></table>';
+        document.getElementById('ticketListPanel').innerHTML = tickets.map(t =>
+          '<div class="admin-ticket-item" data-id="' + esc(t.id) + '" onclick="openAdminTicket(\\'' + esc(t.id) + '\\')"' +
+          ' style="padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.12s' + (t.id === activeId ? ';background:var(--bg3)' : '') + '">' +
+          '<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:3px">' +
+          '<strong style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px">' + esc(t.subject) + '</strong>' +
+          statusBadge(t.status) + '</div>' +
+          '<div style="font-size:11px;color:var(--muted)">' + esc((t.user_id||'').slice(0,8)) + '… · ' + fmtDate(t.created_at) + '</div></div>'
+        ).join('');
       } catch(err) {
-        document.getElementById('ticketsContainer').innerHTML = '<div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
+        document.getElementById('ticketListPanel').innerHTML = '<div style="padding:12px"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
       }
     };
+
     window.addEventListener('DOMContentLoaded', () => { if (_adminKey()) loadTickets(); });
     document.getElementById('adminKeyInput')?.addEventListener('change', loadTickets);
     `
@@ -1602,6 +1937,7 @@ export function renderFrontend(pathname, apiOrigin) {
     case '/portal/projects':  return pagePortalProjects(apiOrigin);
     case '/portal/billing':   return pagePortalBilling(apiOrigin);
     case '/portal/support':   return pagePortalSupport(apiOrigin);
+    case '/portal/profile':   return pagePortalProfile(apiOrigin);
     case '/admin/dashboard':  return pageAdminDashboard(apiOrigin);
     case '/admin/users':      return pageAdminUsers(apiOrigin);
     case '/admin/revenue':    return pageAdminRevenue(apiOrigin);

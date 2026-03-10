@@ -215,6 +215,7 @@ async function register(request, env) {
 
   const db = getTursoClient(env);
   const id = crypto.randomUUID();
+  const name = String(body?.name || "").trim().slice(0, 120);
   const configuredIterations = Number(env.PASSWORD_HASH_ITERATIONS || DEFAULT_PASSWORD_HASH_ITERATIONS);
   const iterations = Number.isInteger(configuredIterations)
     ? Math.min(Math.max(configuredIterations, MIN_PASSWORD_HASH_ITERATIONS), MAX_PASSWORD_HASH_ITERATIONS)
@@ -223,9 +224,9 @@ async function register(request, env) {
 
   try {
     await db.execute({
-      sql: `INSERT INTO users(id, email, password, credit, created_at)
-            VALUES (?, ?, ?, 0, CURRENT_TIMESTAMP)`,
-      args: [id, body.email.toLowerCase(), passwordHash]
+      sql: `INSERT INTO users(id, email, password, name, plan, credit, created_at)
+            VALUES (?, ?, ?, ?, 'free', 0, CURRENT_TIMESTAMP)`,
+      args: [id, body.email.toLowerCase(), passwordHash, name]
     });
   } catch (error) {
     if (String(error.message || "").toLowerCase().includes("unique")) {
@@ -235,7 +236,20 @@ async function register(request, env) {
   }
 
   const token = await signJwt({ sub: id, email: body.email.toLowerCase() }, env);
-  return json({ user: { id, email: body.email.toLowerCase() }, token }, { status: 201 });
+  return json({ user: { id, email: body.email.toLowerCase(), name, plan: "free" }, token }, { status: 201 });
+}
+
+async function updateProfile(request, env, userId) {
+  const body = await parseJson(request);
+  const name = typeof body?.name === "string" ? body.name.trim().slice(0, 120) : null;
+  if (!name) return json({ error: "name is required" }, { status: 400 });
+
+  const db = getTursoClient(env);
+  await db.execute({
+    sql: "UPDATE users SET name = ? WHERE id = ?",
+    args: [name, userId]
+  });
+  return json({ ok: true, name });
 }
 
 async function login(request, env) {
@@ -246,7 +260,7 @@ async function login(request, env) {
 
   const db = getTursoClient(env);
   const result = await db.execute({
-    sql: "SELECT id, email, password, credit FROM users WHERE email = ? LIMIT 1",
+    sql: "SELECT id, email, password, name, plan, credit FROM users WHERE email = ? LIMIT 1",
     args: [body.email.toLowerCase()]
   });
 
@@ -261,7 +275,7 @@ async function login(request, env) {
   }
 
   const token = await signJwt({ sub: String(user.id), email: String(user.email) }, env);
-  return json({ user: { id: user.id, email: user.email, credit: user.credit }, token });
+  return json({ user: { id: user.id, email: user.email, name: user.name, plan: user.plan, credit: user.credit }, token });
 }
 
 async function deploy(request, env, userId) {
@@ -424,7 +438,7 @@ async function createInvoiceCheckout(request, env, userId) {
 async function me(env, userId) {
   const db = getTursoClient(env);
   const result = await db.execute({
-    sql: "SELECT id, email, credit, created_at FROM users WHERE id = ? LIMIT 1",
+    sql: "SELECT id, email, name, plan, credit, created_at FROM users WHERE id = ? LIMIT 1",
     args: [userId]
   });
 
@@ -461,32 +475,201 @@ async function listInvoices(env, userId) {
 async function createSupportTicket(request, env, userId) {
   const body = await parseJson(request);
   const subject = String(body?.subject || "").trim();
+  const message = String(body?.message || "").trim();
   if (!subject) return json({ error: "subject is required" }, { status: 400 });
 
   const db = getTursoClient(env);
-  const ticket = {
-    id: crypto.randomUUID(),
-    user_id: userId,
-    subject,
-    status: "open"
-  };
+  const ticketId = crypto.randomUUID();
+  const messageId = crypto.randomUUID();
 
   await db.execute({
-    sql: `INSERT INTO tickets(id, user_id, subject, status, created_at)
-          VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-    args: [ticket.id, ticket.user_id, ticket.subject, ticket.status]
+    sql: `INSERT INTO tickets(id, user_id, subject, message, status, created_at, updated_at)
+          VALUES (?, ?, ?, ?, 'open', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    args: [ticketId, userId, subject, message]
   });
 
-  return json({ ticket }, { status: 201 });
+  if (message) {
+    await db.execute({
+      sql: `INSERT INTO ticket_messages(id, ticket_id, author_id, author_role, body, created_at)
+            VALUES (?, ?, ?, 'client', ?, CURRENT_TIMESTAMP)`,
+      args: [messageId, ticketId, userId, message]
+    });
+  }
+
+  // Notify admin of new ticket
+  const userResult = await db.execute({
+    sql: "SELECT email, name FROM users WHERE id = ? LIMIT 1",
+    args: [userId]
+  });
+  const userEmail = String(userResult.rows[0]?.email || "");
+  const userName  = String(userResult.rows[0]?.name || userEmail);
+
+  await sendEmail(env, {
+    to: env.ADMIN_EMAIL || "admin@ubanihosting.co.za",
+    subject: `[New Ticket] ${subject}`,
+    html: emailLayout({
+      heading: "New Support Ticket",
+      body: `
+        <p>A client has submitted a support ticket.</p>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0">
+          <tr><td style="padding:8px;color:#7d8590;font-size:13px;width:100px">Client</td><td style="padding:8px;font-size:13px">${escHtml(userName)} (${escHtml(userEmail)})</td></tr>
+          <tr><td style="padding:8px;color:#7d8590;font-size:13px">Subject</td><td style="padding:8px;font-size:13px;font-weight:600">${escHtml(subject)}</td></tr>
+          ${message ? `<tr><td style="padding:8px;color:#7d8590;font-size:13px;vertical-align:top">Message</td><td style="padding:8px;font-size:13px">${escHtml(message)}</td></tr>` : ""}
+        </table>
+        <p><a href="${env.PUBLIC_API_BASE_URL || ""}/admin/tickets" style="color:#f97316">View in admin panel →</a></p>
+      `
+    })
+  }).catch(() => {}); // don't fail the request if email fails
+
+  return json({ ticket: { id: ticketId, subject, message, status: "open" } }, { status: 201 });
+}
+
+async function replyToTicket(request, env, userId) {
+  const ticketId = new URL(request.url).pathname.split("/")[4]; // /api/support/tickets/:id/reply
+  const body = await parseJson(request);
+  const replyBody = String(body?.message || "").trim();
+  if (!replyBody) return json({ error: "message is required" }, { status: 400 });
+
+  const db = getTursoClient(env);
+
+  // Verify ticket belongs to user
+  const ticketResult = await db.execute({
+    sql: "SELECT id, subject FROM tickets WHERE id = ? AND user_id = ? LIMIT 1",
+    args: [ticketId, userId]
+  });
+  if (!ticketResult.rows.length) return json({ error: "Ticket not found" }, { status: 404 });
+
+  const msgId = crypto.randomUUID();
+  await db.execute({
+    sql: `INSERT INTO ticket_messages(id, ticket_id, author_id, author_role, body, created_at)
+          VALUES (?, ?, ?, 'client', ?, CURRENT_TIMESTAMP)`,
+    args: [msgId, ticketId, userId, replyBody]
+  });
+  await db.execute({
+    sql: "UPDATE tickets SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    args: [ticketId]
+  });
+
+  return json({ ok: true, messageId: msgId });
+}
+
+async function getTicketThread(request, env, userId) {
+  const ticketId = new URL(request.url).pathname.split("/")[4]; // /api/support/tickets/:id
+  const db = getTursoClient(env);
+
+  const ticketResult = await db.execute({
+    sql: "SELECT id, subject, message, status, created_at FROM tickets WHERE id = ? AND user_id = ? LIMIT 1",
+    args: [ticketId, userId]
+  });
+  if (!ticketResult.rows.length) return json({ error: "Ticket not found" }, { status: 404 });
+
+  const messagesResult = await db.execute({
+    sql: "SELECT id, author_role, body, created_at FROM ticket_messages WHERE ticket_id = ? ORDER BY created_at ASC",
+    args: [ticketId]
+  });
+
+  return json({ ticket: ticketResult.rows[0], messages: messagesResult.rows });
+}
+
+async function adminReplyToTicket(request, env) {
+  const ticketId = new URL(request.url).pathname.split("/")[5]; // /api/admin/tickets/:id/reply
+  const body = await parseJson(request);
+  const replyBody = String(body?.message || "").trim();
+  if (!replyBody) return json({ error: "message is required" }, { status: 400 });
+
+  const db = getTursoClient(env);
+
+  const ticketResult = await db.execute({
+    sql: `SELECT t.id, t.subject, t.user_id, u.email, u.name
+          FROM tickets t
+          JOIN users u ON u.id = t.user_id
+          WHERE t.id = ? LIMIT 1`,
+    args: [ticketId]
+  });
+  if (!ticketResult.rows.length) return json({ error: "Ticket not found" }, { status: 404 });
+
+  const ticket   = ticketResult.rows[0];
+  const msgId    = crypto.randomUUID();
+
+  await db.execute({
+    sql: `INSERT INTO ticket_messages(id, ticket_id, author_id, author_role, body, created_at)
+          VALUES (?, ?, 'admin', 'admin', ?, CURRENT_TIMESTAMP)`,
+    args: [msgId, ticketId, replyBody]
+  });
+  await db.execute({
+    sql: "UPDATE tickets SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    args: [ticketId]
+  });
+
+  // Email the client
+  const clientEmail = String(ticket.email || "");
+  const clientName  = String(ticket.name || clientEmail);
+  if (clientEmail) {
+    const notifId = crypto.randomUUID();
+    const emailResult = await sendEmail(env, {
+      to: clientEmail,
+      subject: `Re: ${ticket.subject} — Ubani Hosting Support`,
+      html: emailLayout({
+        heading: "You have a reply from support",
+        body: `
+          <p>Hi ${escHtml(clientName)},</p>
+          <p>Our team has responded to your support ticket <strong>${escHtml(String(ticket.subject || ""))}</strong>.</p>
+          <div style="background:#161b24;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;margin:16px 0">
+            <p style="color:#7d8590;font-size:12px;margin-bottom:8px">FROM UBANI SUPPORT</p>
+            <p style="font-size:14px;line-height:1.6">${escHtml(replyBody)}</p>
+          </div>
+          <p><a href="${env.PUBLIC_API_BASE_URL || ""}/portal/support" style="color:#f97316">View your ticket →</a></p>
+        `
+      })
+    }).catch(err => ({ error: err.message }));
+
+    await db.execute({
+      sql: `INSERT INTO notifications(id, user_id, type, subject, status, error, sent_at)
+            VALUES (?, ?, 'ticket_reply', ?, ?, ?, CURRENT_TIMESTAMP)`,
+      args: [notifId, String(ticket.user_id), `Re: ${ticket.subject}`, emailResult?.error ? "failed" : "sent", emailResult?.error || null]
+    });
+  }
+
+  return json({ ok: true, messageId: msgId });
+}
+
+async function adminGetTicketThread(request, env) {
+  const ticketId = new URL(request.url).pathname.split("/")[5]; // /api/admin/tickets/:id
+  const db = getTursoClient(env);
+
+  const ticketResult = await db.execute({
+    sql: `SELECT t.id, t.subject, t.message, t.status, t.created_at, u.email, u.name
+          FROM tickets t JOIN users u ON u.id = t.user_id
+          WHERE t.id = ? LIMIT 1`,
+    args: [ticketId]
+  });
+  if (!ticketResult.rows.length) return json({ error: "Ticket not found" }, { status: 404 });
+
+  const messagesResult = await db.execute({
+    sql: "SELECT id, author_role, body, created_at FROM ticket_messages WHERE ticket_id = ? ORDER BY created_at ASC",
+    args: [ticketId]
+  });
+
+  return json({ ticket: ticketResult.rows[0], messages: messagesResult.rows });
+}
+
+async function adminCloseTicket(request, env) {
+  const ticketId = new URL(request.url).pathname.split("/")[5]; // /api/admin/tickets/:id/close
+  const db = getTursoClient(env);
+  await db.execute({
+    sql: "UPDATE tickets SET status = 'closed', updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    args: [ticketId]
+  });
+  return json({ ok: true });
 }
 
 async function listSupportTickets(env, userId) {
   const db = getTursoClient(env);
   const result = await db.execute({
-    sql: `SELECT id, subject, status, created_at
+    sql: `SELECT id, subject, status, created_at, updated_at
           FROM tickets
           WHERE user_id = ?
-          ORDER BY created_at DESC
+          ORDER BY updated_at DESC
           LIMIT 100`,
     args: [userId]
   });
@@ -655,6 +838,76 @@ async function yocoWebhook(request, env, rawBody) {
   return json({ ok: true, invoiceId, status });
 }
 
+// ── Email via Resend ──────────────────────────────────────────
+function escHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function emailLayout({ heading, body }) {
+  return `<!doctype html>
+<html>
+<head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#0a0c10;font-family:'DM Sans',system-ui,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0c10;padding:40px 16px">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#0f1117;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;max-width:560px;width:100%">
+        <tr><td style="padding:24px 28px;border-bottom:1px solid rgba(255,255,255,0.08)">
+          <span style="font-size:15px;font-weight:700;color:#e6edf3">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f97316;margin-right:8px;vertical-align:middle"></span>
+            Ubani Hosting
+          </span>
+        </td></tr>
+        <tr><td style="padding:28px">
+          <h1 style="font-size:20px;font-weight:700;color:#e6edf3;margin:0 0 16px;letter-spacing:-0.02em">${heading}</h1>
+          <div style="font-size:14px;color:#7d8590;line-height:1.6">${body}</div>
+        </td></tr>
+        <tr><td style="padding:16px 28px;border-top:1px solid rgba(255,255,255,0.08);font-size:12px;color:#4a5568">
+          Ubani Hosting · ubanihosting.co.za · Unsubscribe from transactional emails not available (account notifications)
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+async function sendEmail(env, { to, subject, html }) {
+  const apiKey = env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn("RESEND_API_KEY not configured — email skipped");
+    return { skipped: true };
+  }
+
+  const fromName  = env.EMAIL_FROM_NAME || "Ubani Hosting";
+  const fromEmail = env.EMAIL_FROM || "noreply@ubanihosting.co.za";
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      from: `${fromName} <${fromEmail}>`,
+      to: [to],
+      subject,
+      html
+    })
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.message || `Resend error ${response.status}`);
+  }
+  return data;
+}
+
+// ─────────────────────────────────────────────────────────────
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -741,6 +994,27 @@ export default {
         return await adminTickets(env);
       }
 
+      if (request.method === "GET" && url.pathname === "/api/admin/tickets") {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        return await adminTickets(env);
+      }
+      if (request.method === "GET" && /^\/api\/admin\/tickets\/[^/]+$/.test(url.pathname)) {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        return await adminGetTicketThread(request, env);
+      }
+      if (request.method === "POST" && /^\/api\/admin\/tickets\/[^/]+\/reply$/.test(url.pathname)) {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        return await adminReplyToTicket(request, env);
+      }
+      if (request.method === "POST" && /^\/api\/admin\/tickets\/[^/]+\/close$/.test(url.pathname)) {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        return await adminCloseTicket(request, env);
+      }
+
       const authUserId = await getAuthUserId(request, env);
       if (!authUserId) {
         return json({ error: "Unauthorized" }, { status: 401 });
@@ -749,11 +1023,19 @@ export default {
       if (request.method === "POST" && url.pathname === "/api/deploy") return await deploy(request, env, authUserId);
       if (request.method === "POST" && url.pathname === "/api/invoice") return await invoice(request, env, authUserId);
       if (request.method === "POST" && url.pathname === "/api/invoice/checkout") return await createInvoiceCheckout(request, env, authUserId);
+
+      // Support tickets
       if (request.method === "POST" && url.pathname === "/api/support/tickets") return await createSupportTicket(request, env, authUserId);
-      if (request.method === "GET" && url.pathname === "/api/me") return await me(env, authUserId);
+      if (request.method === "GET"  && url.pathname === "/api/support/tickets") return await listSupportTickets(env, authUserId);
+      if (request.method === "GET"  && /^\/api\/support\/tickets\/[^/]+$/.test(url.pathname)) return await getTicketThread(request, env, authUserId);
+      if (request.method === "POST" && /^\/api\/support\/tickets\/[^/]+\/reply$/.test(url.pathname)) return await replyToTicket(request, env, authUserId);
+
+      // User profile
+      if (request.method === "GET"   && url.pathname === "/api/me") return await me(env, authUserId);
+      if (request.method === "PATCH" && url.pathname === "/api/me") return await updateProfile(request, env, authUserId);
+
       if (request.method === "GET" && url.pathname === "/api/projects") return await listProjects(env, authUserId);
       if (request.method === "GET" && url.pathname === "/api/invoices") return await listInvoices(env, authUserId);
-      if (request.method === "GET" && url.pathname === "/api/support/tickets") return await listSupportTickets(env, authUserId);
 
       return json({ message: "Ubani API" });
     } catch (error) {
