@@ -1047,11 +1047,11 @@ function pageLogin(apiOrigin) {
       <p>Sign in to your client portal</p>
 
       <div class="form-group">
-        <label class="form-label">Email address</label>
+        <label class="form-label" for="email">Email address</label>
         <input id="email" type="email" class="form-input" placeholder="you@example.com" autocomplete="email"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Password</label>
+        <label class="form-label" for="password">Password</label>
         <input id="password" type="password" class="form-input" placeholder="••••••••" autocomplete="current-password"/>
       </div>
 
@@ -1101,19 +1101,19 @@ function pageRegister(apiOrigin) {
       <p>Start with a free plan — no credit card needed</p>
 
       <div class="form-group">
-        <label class="form-label">Full name</label>
+        <label class="form-label" for="name">Full name</label>
         <input id="name" type="text" class="form-input" placeholder="Jane Smith" autocomplete="name"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Email address</label>
+        <label class="form-label" for="email">Email address</label>
         <input id="email" type="email" class="form-input" placeholder="you@example.com" autocomplete="email"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Password</label>
+        <label class="form-label" for="password">Password</label>
         <input id="password" type="password" class="form-input" placeholder="Min. 8 characters" autocomplete="new-password"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Confirm password</label>
+        <label class="form-label" for="password2">Confirm password</label>
         <input id="password2" type="password" class="form-input" placeholder="Repeat password" autocomplete="new-password"/>
       </div>
 
@@ -1265,11 +1265,11 @@ function pagePortalProjects(apiOrigin) {
         <div class="card-header"><h2>New Project</h2><p>Create a new client deployment</p></div>
         <div class="card-body">
           <div class="form-group">
-            <label class="form-label">Domain / Project name</label>
+            <label class="form-label" for="newDomain">Domain / Project name</label>
             <input id="newDomain" class="form-input" placeholder="client-site.co.za"/>
           </div>
           <div class="form-group">
-            <label class="form-label">Description (optional)</label>
+            <label class="form-label" for="newDesc">Description (optional)</label>
             <input id="newDesc" class="form-input" placeholder="Brief project notes"/>
           </div>
           <button class="btn btn-primary" onclick="doCreateProject()" id="createProjBtn" style="padding:9px 20px">Create Project</button>
@@ -1447,7 +1447,7 @@ function pagePortalBilling(apiOrigin) {
         <div class="card-header"><h2>Create Invoice</h2><p>Initiate a Yoco payment session</p></div>
         <div class="card-body">
           <div class="form-group">
-            <label class="form-label">Amount (ZAR)</label>
+            <label class="form-label" for="invoiceAmount">Amount (ZAR)</label>
             <div style="display:flex;align-items:center;gap:8px">
               <span style="color:var(--muted);font-size:18px;font-weight:600">R</span>
               <input id="amountRand" class="form-input" type="number" min="1" step="0.01" placeholder="99.00" style="font-size:18px;font-weight:600"/>
@@ -1548,11 +1548,11 @@ function pagePortalSupport(apiOrigin) {
         <div class="card-header"><h2>New Support Ticket</h2><p>Our team typically responds within 24 hours</p></div>
         <div class="card-body">
           <div class="form-group">
-            <label class="form-label">Subject</label>
+            <label class="form-label" for="newSubject">Subject</label>
             <input id="newSubject" class="form-input" placeholder="Brief description of your issue"/>
           </div>
           <div class="form-group">
-            <label class="form-label">Message</label>
+            <label class="form-label" for="newMessage">Message</label>
             <textarea id="newMessage" class="form-input" placeholder="Describe your issue in detail..." style="min-height:140px"></textarea>
           </div>
           <button class="btn btn-primary" onclick="submitNewTicket()" id="submitTicketBtn" style="padding:10px 20px">Submit Ticket</button>
@@ -1675,7 +1675,7 @@ function pagePortalProfile(apiOrigin) {
           </div>
           <hr style="border:none;border-top:1px solid var(--border);margin-bottom:20px"/>
           <div class="form-group">
-            <label class="form-label">Full Name</label>
+            <label class="form-label" for="nameInput">Full Name</label>
             <input id="nameInput" class="form-input" placeholder="Your name"/>
           </div>
           <button class="btn btn-primary" onclick="saveProfile()" id="saveBtn" style="padding:9px 20px">Save Changes</button>
