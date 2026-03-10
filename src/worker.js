@@ -551,6 +551,17 @@ async function adminRevenue(env) {
   return json({ totals: byStatus.rows, latestPaid: latestPaid.rows });
 }
 
+async function adminTickets(env) {
+  const db = getTursoClient(env);
+  const result = await db.execute({
+    sql: `SELECT id, user_id, subject, status, created_at
+          FROM tickets
+          ORDER BY created_at DESC
+          LIMIT 200`
+  });
+  return json({ tickets: result.rows });
+}
+
 function normalizePaymentStatus(value) {
   const status = String(value || "").toLowerCase();
   if (status === "successful" || status === "paid" || status === "completed") return "paid";
@@ -723,6 +734,11 @@ export default {
         const adminError = requireAdmin(request, env);
         if (adminError) return adminError;
         return await adminRevenue(env);
+      }
+      if (request.method === "GET" && url.pathname === "/api/admin/tickets") {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        return await adminTickets(env);
       }
 
       const authUserId = await getAuthUserId(request, env);

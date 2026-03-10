@@ -1,1108 +1,1616 @@
-const LANDING_ART_URL = "/assets/landing.png";
-const PANEL_1_URL = "/assets/panel-1.png";
-const PANEL_2_URL = "/assets/panel-2.png";
-const PANEL_3_URL = "/assets/panel-3.png";
+// ─────────────────────────────────────────────
+//  Ubani Hosting — Frontend (Phase 1 Rebuild)
+//  Dark premium UI · GitHub/Raycast/Linear feel
+//  All pages: marketing + portal + admin
+// ─────────────────────────────────────────────
 
-function shell({ title, body, nav = "", script = "", apiOrigin = "" }) {
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Ubani Hosting - High-performance hosting and deployment platform for South Africa." />
-    <title>${title}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <style>
-      :root {
-        --bg: #081425;
-        --bg-2: #0d1d34;
-        --panel: rgba(10, 24, 44, 0.72);
-        --panel-strong: rgba(16, 34, 60, 0.82);
-        --ink: #ecf2ff;
-        --muted: #adc1e8;
-        --brand: #ff7a18;
-        --brand-2: #4f7fff;
-        --line: rgba(141, 174, 236, 0.24);
-        --ok: #7dd3fc;
-        --danger: #fca5a5;
-        --shadow: 0 18px 44px rgba(1, 10, 28, 0.42);
-      }
-      * { box-sizing: border-box; }
-      html, body { margin: 0; padding: 0; }
-      body {
-        font-family: "Sora", "Avenir Next", "Segoe UI", sans-serif;
-        color: var(--ink);
-        background:
-          linear-gradient(180deg, rgba(8, 14, 30, 0.74), rgba(8, 14, 30, 0.74)),
-          url('${LANDING_ART_URL}') center/cover fixed no-repeat,
-          radial-gradient(900px 500px at 0% -10%, rgba(79, 70, 229, 0.18) 0%, transparent 52%),
-          radial-gradient(850px 420px at 100% -5%, rgba(6, 182, 212, 0.16) 0%, transparent 46%),
-          radial-gradient(700px 300px at 50% 120%, rgba(99, 102, 241, 0.14) 0%, transparent 56%),
-          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
-        min-height: 100vh;
-      }
-      a { color: #b6d3ff; text-decoration: none; }
-      a:hover { text-decoration: underline; }
+// ── Shared CSS ────────────────────────────────
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-      header {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        backdrop-filter: blur(12px);
-        background: linear-gradient(180deg, rgba(5, 13, 28, 0.82), rgba(5, 13, 28, 0.62));
-        border-bottom: 1px solid rgba(128, 157, 220, 0.24);
-      }
-      .bar {
-        max-width: 1160px;
-        margin: 0 auto;
-        padding: 14px 18px;
-        display: flex;
-        gap: 14px;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-      }
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 9px;
-        font-weight: 800;
-        letter-spacing: 0.02em;
-        color: #f6f9ff;
-      }
-      nav { display: flex; flex-wrap: wrap; gap: 6px; }
-      nav a {
-        display: inline-flex;
-        align-items: center;
-        padding: 8px 10px;
-        border-radius: 10px;
-        color: #c5d6f5;
-        font-size: 0.9rem;
-      }
-      nav a:hover { text-decoration: none; background: rgba(97, 133, 216, 0.22); }
-      nav a strong { color: #f6f9ff; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      main { max-width: 1160px; margin: 0 auto; padding: 28px 18px 60px; }
-      .hero {
-        margin-bottom: 18px;
-        padding: 28px;
-        border: 1px solid var(--line);
-        border-radius: 22px;
-        background: linear-gradient(155deg, rgba(10, 24, 46, 0.88), rgba(12, 30, 56, 0.86));
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(12px);
-      }
-      .hero.hosting {
-        background:
-          radial-gradient(560px 260px at 84% 104%, rgba(255, 122, 24, 0.30) 0%, transparent 75%),
-          radial-gradient(1000px 360px at 8% 2%, rgba(57, 97, 206, 0.34) 0%, transparent 64%),
-          linear-gradient(180deg, #091325 0%, #08101f 100%);
-        border-color: rgba(103, 136, 220, 0.5);
-      }
-      .hero.hosting h1,
-      .hero.hosting p { color: #eef3ff; }
-      .hero.hosting .pill {
-        background: rgba(17, 41, 86, 0.82);
-        color: #dce9ff;
-      }
-      .hero h1 {
-        margin: 0 0 8px;
-        font-size: clamp(1.7rem, 4vw, 2.5rem);
-        line-height: 1.05;
-        letter-spacing: -0.02em;
-      }
-      .hero p { margin: 0; color: #bfd0f3; }
+  :root {
+    --bg:        #0a0c10;
+    --bg1:       #0f1117;
+    --bg2:       #161b24;
+    --bg3:       #1c2333;
+    --border:    rgba(255,255,255,0.07);
+    --border2:   rgba(255,255,255,0.12);
+    --text:      #e6edf3;
+    --muted:     #7d8590;
+    --muted2:    #6e7781;
+    --accent:    #f97316;
+    --accent2:   #fb923c;
+    --blue:      #388bfd;
+    --green:     #3fb950;
+    --red:       #f85149;
+    --yellow:    #d29922;
+    --sidebar-w: 220px;
+    --header-h:  56px;
+    --radius:    8px;
+    --radius-lg: 12px;
+    --shadow:    0 8px 32px rgba(0,0,0,0.4);
+    --glow:      0 0 0 1px rgba(249,115,22,0.3), 0 0 20px rgba(249,115,22,0.12);
+  }
 
-      .grid { display: grid; gap: 14px; }
-      .two { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
-      .three { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  html, body { height: 100%; }
 
-      .card {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 16px;
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(10px);
-      }
-      .card.accent { background: var(--panel-strong); }
-      .card .thumb {
-        width: 100%;
-        display: block;
-        border-radius: 12px;
-        border: 1px solid var(--line);
-        margin-bottom: 10px;
-      }
-      .card h2, .card h3 { margin: 0 0 10px; letter-spacing: -0.01em; }
-      .card p { margin: 0 0 8px; color: var(--muted); line-height: 1.45; }
-      .card ul { margin: 0; padding-left: 18px; color: var(--muted); }
-      .card li + li { margin-top: 7px; }
-      .profile-output {
-        margin-top: 10px;
-        border: 1px solid rgba(133, 164, 224, 0.35);
-        border-radius: 12px;
-        background: rgba(7, 19, 38, 0.62);
-        padding: 12px;
-      }
-      .profile-placeholder {
-        color: #9ab3df;
-        margin: 0;
-        font-size: 0.9rem;
-      }
-      .profile-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 10px;
-      }
-      .profile-item {
-        border: 1px solid rgba(145, 176, 235, 0.24);
-        background: rgba(11, 27, 50, 0.74);
-        border-radius: 10px;
-        padding: 9px;
-      }
-      .profile-item .label {
-        display: block;
-        color: #95b0e1;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        font-size: 0.68rem;
-        margin-bottom: 4px;
-      }
-      .profile-item .value {
-        color: #eef4ff;
-        font-size: 0.9rem;
-        line-height: 1.3;
-        overflow-wrap: anywhere;
-      }
-      .profile-raw {
-        margin-top: 10px;
-      }
-      .profile-raw summary {
-        cursor: pointer;
-        color: #b6cefb;
-        font-size: 0.84rem;
-      }
-      .profile-raw pre {
-        margin-top: 8px;
-      }
-      .stack-list {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-        display: grid;
-        gap: 9px;
-      }
-      .stack-list li {
-        border: 1px solid rgba(145, 176, 235, 0.24);
-        background: rgba(11, 27, 50, 0.74);
-        border-radius: 10px;
-        padding: 10px;
-      }
-      .inline-meta {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 6px;
-        margin-top: 8px;
-      }
-      .inline-meta span {
-        color: #9ab3df;
-        font-size: 0.78rem;
-      }
-      .status-chip {
-        display: inline-flex;
-        align-items: center;
-        padding: 3px 8px;
-        border-radius: 999px;
-        border: 1px solid rgba(145, 176, 235, 0.3);
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-      .status-chip.paid { color: #86efac; border-color: rgba(74, 222, 128, 0.35); }
-      .status-chip.pending { color: #fcd34d; border-color: rgba(250, 204, 21, 0.35); }
-      .status-chip.failed { color: #fca5a5; border-color: rgba(248, 113, 113, 0.35); }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
 
-      .pill {
-        display: inline-block;
-        border: 1px solid rgba(135, 168, 231, 0.42);
-        background: rgba(18, 43, 82, 0.64);
-        color: #d8e6ff;
-        border-radius: 999px;
-        padding: 5px 11px;
-        font-size: 0.74rem;
-        margin-right: 6px;
-        margin-top: 4px;
-      }
-      .eyebrow {
-        display: inline-block;
-        margin-bottom: 10px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        font-size: 0.72rem;
-        color: #98b7ee;
-      }
-      .cta, button {
-        border: 0;
-        border-radius: 12px;
-        background: linear-gradient(135deg, var(--brand), #ff9f43);
-        color: #f8f9ff;
-        padding: 10px 14px;
-        font: inherit;
-        font-weight: 700;
-        cursor: pointer;
-        transition: transform 180ms ease, box-shadow 180ms ease;
-      }
-      .cta { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
-      .cta:hover, button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14); text-decoration: none; }
-      .cta.ghost, button.secondary {
-        background: rgba(28, 55, 101, 0.75);
-        color: #dce9ff;
-        border: 1px solid rgba(145, 179, 239, 0.4);
-      }
-      .cta-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 14px;
-      }
-      .stat-strip {
-        margin-top: 16px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 10px;
-      }
-      .stat {
-        border: 1px solid rgba(150, 181, 238, 0.28);
-        border-radius: 12px;
-        background: rgba(8, 24, 48, 0.62);
-        padding: 10px;
-      }
-      .stat strong {
-        display: block;
-        font-size: 1.08rem;
-        color: #f3f8ff;
-      }
-      .stat span {
-        color: #a9c1e9;
-        font-size: 0.78rem;
-      }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
 
-      .row { display: grid; gap: 6px; margin-bottom: 10px; }
-      label { color: #b9cdf0; font-size: 0.9rem; }
-      input, textarea {
-        width: 100%;
-        border: 1px solid rgba(137, 164, 221, 0.42);
-        border-radius: 10px;
-        padding: 10px 11px;
-        font: inherit;
-        background: rgba(8, 24, 45, 0.74);
-        color: #f0f6ff;
-      }
-      input::placeholder, textarea::placeholder { color: #89a4d4; }
-      textarea { min-height: 110px; resize: vertical; }
-      pre {
-        margin: 0;
-        padding: 11px;
-        border-radius: 10px;
-        border: 1px solid rgba(133, 164, 224, 0.35);
-        background: rgba(7, 19, 38, 0.72);
-        color: #dbe8ff;
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 0.8rem;
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
-      .status { min-height: 20px; margin-top: 8px; color: var(--ok); font-size: .92rem; }
-      .status.error { color: var(--danger); }
+  /* ── MARKETING LAYOUT ─────────────────────── */
+  .mkt-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: var(--header-h);
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,12,16,0.85);
+    backdrop-filter: blur(20px);
+    display: flex; align-items: center;
+  }
+  .mkt-header-inner {
+    max-width: 1100px; width: 100%; margin: 0 auto;
+    padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .wordmark {
+    font-size: 15px; font-weight: 700; letter-spacing: -0.01em;
+    color: var(--text); display: flex; align-items: center; gap: 8px;
+  }
+  .wordmark-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+  .mkt-nav { display: flex; align-items: center; gap: 4px; }
+  .mkt-nav a {
+    padding: 6px 12px; border-radius: var(--radius);
+    color: var(--muted); font-size: 13px; font-weight: 500;
+    transition: color 0.15s, background 0.15s;
+  }
+  .mkt-nav a:hover { color: var(--text); background: var(--bg2); text-decoration: none; }
+  .mkt-nav a.active { color: var(--text); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 16px; border-radius: var(--radius);
+    font: inherit; font-weight: 600; font-size: 13px;
+    cursor: pointer; border: none; transition: all 0.15s;
+    text-decoration: none !important;
+  }
+  .btn-primary {
+    background: var(--accent); color: #fff;
+    box-shadow: 0 1px 3px rgba(249,115,22,0.4);
+  }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(249,115,22,0.4); }
+  .btn-ghost {
+    background: var(--bg2); color: var(--text);
+    border: 1px solid var(--border2);
+  }
+  .btn-ghost:hover { background: var(--bg3); border-color: var(--border2); }
+  .btn-danger {
+    background: rgba(248,81,73,0.15); color: var(--red);
+    border: 1px solid rgba(248,81,73,0.3);
+  }
+  .btn-danger:hover { background: rgba(248,81,73,0.25); }
 
-      .reveal { opacity: 0; transform: translateY(14px); animation: rise 500ms ease forwards; }
-      .reveal[data-delay="1"] { animation-delay: 80ms; }
-      .reveal[data-delay="2"] { animation-delay: 140ms; }
-      .reveal[data-delay="3"] { animation-delay: 200ms; }
-      @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+  .mkt-main {
+    max-width: 1100px; margin: 0 auto;
+    padding: calc(var(--header-h) + 48px) 24px 80px;
+  }
 
-      footer {
-        margin-top: 20px;
-        color: #89a5d8;
-        font-size: .82rem;
-      }
-      .mono { font-family: "IBM Plex Mono", monospace; }
+  /* ── HERO ─────────────────────────────────── */
+  .hero {
+    padding: 64px 0 48px;
+    position: relative;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px 4px 6px; border-radius: 999px;
+    border: 1px solid rgba(249,115,22,0.3);
+    background: rgba(249,115,22,0.08);
+    color: var(--accent); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero-badge-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; } 50% { opacity: 0.4; }
+  }
+  .hero h1 {
+    font-size: clamp(32px, 5vw, 54px);
+    font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;
+    margin-bottom: 18px;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p {
+    font-size: 17px; color: var(--muted); max-width: 540px;
+    line-height: 1.65; margin-bottom: 28px;
+  }
+  .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-      @media (max-width: 720px) {
-        .hero { padding: 16px; border-radius: 16px; }
-        .bar { padding: 12px; }
-        main { padding: 18px 12px 44px; }
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <div class="bar">
-        <div class="brand">Ubani Hosting</div>
-        <nav>${nav}</nav>
-      </div>
-    </header>
-    <main>${body}<footer>API Origin: <span class="mono">${apiOrigin}</span></footer></main>
-    <script>
-      window.__UBANI_ORIGIN = ${JSON.stringify(apiOrigin)};
-      (function () {
-        const APP_ORIGIN = window.__UBANI_ORIGIN || window.location.origin;
-        document.addEventListener("click", (event) => {
-          const link = event.target && event.target.closest ? event.target.closest("a[href^='/']") : null;
-          if (!link) return;
-          if (window.location.origin === APP_ORIGIN) return;
-          event.preventDefault();
-          window.location.href = APP_ORIGIN + link.getAttribute("href");
-        });
-      })();
-    </script>
-    ${script ? `<script>${script}</script>` : ""}
-  </body>
-</html>`;
-}
+  /* ── FEATURE GRID ─────────────────────────── */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin: 48px 0;
+    background: var(--border);
+  }
+  .feature-card {
+    background: var(--bg1);
+    padding: 28px 24px;
+    transition: background 0.15s;
+  }
+  .feature-card:hover { background: var(--bg2); }
+  .feature-icon {
+    width: 36px; height: 36px; border-radius: var(--radius);
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin-bottom: 14px;
+  }
+  .feature-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .feature-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
-function marketingNav() {
-  return [
-    `<a href="/"><strong>Home</strong></a>`,
-    `<a href="/pricing">Pricing</a>`,
-    `<a href="/hosting">Hosting</a>`,
-    `<a href="/contact">Contact</a>`,
-    `<a href="/portal/login">Portal</a>`,
-    `<a href="/admin/dashboard">Admin</a>`
-  ].join("");
-}
+  /* ── PRICING ──────────────────────────────── */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px; margin: 40px 0;
+  }
+  .plan-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 24px;
+    background: var(--bg1);
+    position: relative;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .plan-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .plan-card.featured {
+    border-color: rgba(249,115,22,0.5);
+    background: linear-gradient(135deg, rgba(249,115,22,0.06), var(--bg1));
+    box-shadow: var(--glow);
+  }
+  .plan-badge {
+    position: absolute; top: -10px; left: 24px;
+    padding: 2px 10px; border-radius: 999px;
+    background: var(--accent); color: #fff;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .plan-name { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .plan-price { font-size: 36px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; margin-bottom: 4px; }
+  .plan-price span { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .plan-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+  .plan-features li { font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .plan-features li::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 12px; flex-shrink: 0; }
 
-function portalNav() {
-  return [
-    `<a href="/"><strong>Marketing</strong></a>`,
-    `<a href="/portal/login">Login</a>`,
-    `<a href="/portal/register">Register</a>`,
-    `<a href="/portal/dashboard">Dashboard</a>`,
-    `<a href="/portal/billing">Billing</a>`,
-    `<a href="/portal/projects">Projects</a>`,
-    `<a href="/portal/support">Support</a>`
-  ].join("");
-}
+  /* ── DIVIDER ──────────────────────────────── */
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 
-function adminNav() {
-  return [
-    `<a href="/"><strong>Marketing</strong></a>`,
-    `<a href="/admin/dashboard">Dashboard</a>`,
-    `<a href="/admin/users">Users</a>`,
-    `<a href="/admin/revenue">Revenue</a>`
-  ].join("");
-}
+  /* ── PORTAL LAYOUT (sidebar) ──────────────── */
+  .portal-wrap {
+    display: flex; min-height: 100vh;
+  }
+  .sidebar {
+    width: var(--sidebar-w); flex-shrink: 0;
+    background: var(--bg1);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    z-index: 50;
+    transition: transform 0.2s;
+  }
+  .sidebar-top {
+    padding: 18px 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-wordmark { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+  .sidebar-section-label {
+    padding: 16px 16px 6px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted2);
+  }
+  .sidebar-nav { padding: 4px 8px; flex: 1; overflow-y: auto; }
+  .sidebar-nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: var(--radius);
+    color: var(--muted); font-size: 13px; font-weight: 500;
+    transition: all 0.12s; margin-bottom: 2px;
+    text-decoration: none !important;
+  }
+  .sidebar-nav a:hover { color: var(--text); background: var(--bg2); }
+  .sidebar-nav a.active { color: var(--text); background: var(--bg3); }
+  .sidebar-nav a .icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+  .sidebar-bottom {
+    padding: 12px 8px;
+    border-top: 1px solid var(--border);
+  }
+  .sidebar-user {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: var(--radius);
+  }
+  .user-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #9333ea);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .user-info { min-width: 0; flex: 1; }
+  .user-email { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-plan { font-size: 11px; color: var(--muted); }
 
-const portalScript = `
-const tokenKey = "ubani_portal_token";
-const APP_ORIGIN = window.__UBANI_ORIGIN || window.location.origin;
-const readToken = () => localStorage.getItem(tokenKey) || "";
-const writeToken = (value) => value ? localStorage.setItem(tokenKey, value) : localStorage.removeItem(tokenKey);
-const api = async (path, options = {}, auth = false) => {
-  const target = path.startsWith("http") ? path : (APP_ORIGIN + path);
-  const headers = { "content-type": "application/json", ...(options.headers || {}) };
-  if (auth && readToken()) headers.authorization = "Bearer " + readToken();
-  const response = await fetch(target, { ...options, headers });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
+  .portal-content {
+    margin-left: var(--sidebar-w);
+    flex: 1; display: flex; flex-direction: column; min-height: 100vh;
+  }
+  .portal-topbar {
+    height: var(--header-h); border-bottom: 1px solid var(--border);
+    background: var(--bg); padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 40;
+  }
+  .portal-topbar h1 { font-size: 15px; font-weight: 600; }
+  .portal-main { padding: 28px; max-width: 960px; }
+
+  /* ── CARDS ────────────────────────────────── */
+  .card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg1);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-header h2 { font-size: 14px; font-weight: 600; }
+  .card-header p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .card-body { padding: 20px; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .stat-card {
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 16px; background: var(--bg1);
+  }
+  .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ── FORM ELEMENTS ────────────────────────── */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .form-input {
+    width: 100%; padding: 9px 12px;
+    background: var(--bg); border: 1px solid var(--border2);
+    border-radius: var(--radius); color: var(--text);
+    font: inherit; font-size: 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(249,115,22,0.12); }
+  .form-input::placeholder { color: var(--muted2); }
+  textarea.form-input { min-height: 100px; resize: vertical; }
+
+  /* ── ALERTS / STATUS ──────────────────────── */
+  .alert {
+    padding: 10px 14px; border-radius: var(--radius);
+    font-size: 13px; display: flex; align-items: center; gap: 8px;
+    margin-top: 12px;
+  }
+  .alert-error { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); color: var(--red); }
+  .alert-success { background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); color: var(--green); }
+  .alert-info { background: rgba(56,139,253,0.1); border: 1px solid rgba(56,139,253,0.3); color: var(--blue); }
+  .alert-warn { background: rgba(210,153,34,0.1); border: 1px solid rgba(210,153,34,0.3); color: var(--yellow); }
+  .alert:empty { display: none; }
+
+  /* ── BADGE / CHIPS ────────────────────────── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+    border: 1px solid transparent;
+  }
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--green); border-color: rgba(63,185,80,0.3); }
+  .badge-yellow { background: rgba(210,153,34,0.15); color: var(--yellow); border-color: rgba(210,153,34,0.3); }
+  .badge-red { background: rgba(248,81,73,0.15); color: var(--red); border-color: rgba(248,81,73,0.3); }
+  .badge-blue { background: rgba(56,139,253,0.15); color: var(--blue); border-color: rgba(56,139,253,0.3); }
+
+  /* ── TABLE ────────────────────────────────── */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    text-align: left; padding: 10px 16px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+  }
+  .data-table td {
+    padding: 12px 16px; font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .mono { font-family: 'DM Mono', monospace; font-size: 12px; }
+
+  /* ── EMPTY STATE ──────────────────────────── */
+  .empty-state {
+    text-align: center; padding: 48px 24px; color: var(--muted);
+  }
+  .empty-state .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.5; }
+  .empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .empty-state p { font-size: 13px; max-width: 300px; margin: 0 auto 20px; }
+
+  /* ── AUTH PAGES ───────────────────────────── */
+  .auth-wrap {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    background:
+      radial-gradient(600px 400px at 20% 30%, rgba(249,115,22,0.06) 0%, transparent 70%),
+      radial-gradient(800px 600px at 80% 80%, rgba(56,139,253,0.05) 0%, transparent 70%),
+      var(--bg);
+  }
+  .auth-card {
+    width: 100%; max-width: 400px;
+    border: 1px solid var(--border2); border-radius: 16px;
+    background: var(--bg1); padding: 32px;
+    box-shadow: var(--shadow);
+  }
+  .auth-logo { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; font-size: 15px; font-weight: 700; }
+  .auth-card h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .auth-card p { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .auth-footer { margin-top: 20px; text-align: center; font-size: 13px; color: var(--muted); }
+  .auth-footer a { color: var(--accent); }
+
+  /* ── LOADING ──────────────────────────────── */
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TICKET THREAD ────────────────────────── */
+  .ticket-thread { display: flex; flex-direction: column; gap: 12px; }
+  .ticket-msg {
+    padding: 12px 16px; border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .ticket-msg.admin {
+    border-color: rgba(249,115,22,0.25);
+    background: rgba(249,115,22,0.06);
+  }
+  .ticket-msg-meta { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .ticket-msg p { font-size: 13px; }
+
+  /* ── ANIMATIONS ───────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.35s ease both; }
+  .fade-up-1 { animation-delay: 0.05s; }
+  .fade-up-2 { animation-delay: 0.10s; }
+  .fade-up-3 { animation-delay: 0.15s; }
+  .fade-up-4 { animation-delay: 0.20s; }
+
+  /* ── MARKETING FOOTER ─────────────────────── */
+  .mkt-footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--muted); font-size: 13px;
+  }
+  .mkt-footer a { color: var(--muted); }
+  .mkt-footer a:hover { color: var(--text); }
+
+  /* ── RESPONSIVE ───────────────────────────── */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .portal-content { margin-left: 0; }
+    .hero h1 { font-size: 28px; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+`;
+
+// ── Shared JS utilities (injected into every authenticated page) ──────────
+const PORTAL_SCRIPT = `
+const _K = 'ubani_t';
+const _getToken = () => localStorage.getItem(_K) || '';
+const _setToken = v => v ? localStorage.setItem(_K, v) : localStorage.removeItem(_K);
+const _getUser  = () => { try { return JSON.parse(localStorage.getItem('ubani_u') || 'null'); } catch { return null; } };
+const _setUser  = u => u ? localStorage.setItem('ubani_u', JSON.stringify(u)) : localStorage.removeItem('ubani_u');
+const APP = window.__UBANI_ORIGIN || window.location.origin;
+
+// Redirect to login if no token
+if (!_getToken()) { window.location.replace(APP + '/portal/login'); }
+
+// Populate user info in sidebar
+window.addEventListener('DOMContentLoaded', () => {
+  const u = _getUser();
+  if (u) {
+    const avatar = document.getElementById('userAvatar');
+    const email  = document.getElementById('userEmail');
+    const plan   = document.getElementById('userPlan');
+    if (avatar) avatar.textContent = (u.email || '?')[0].toUpperCase();
+    if (email)  email.textContent  = u.email || '';
+    if (plan)   plan.textContent   = u.plan  || 'Free Plan';
+  }
+  // Highlight active nav link
+  const current = window.location.pathname;
+  document.querySelectorAll('.sidebar-nav a').forEach(a => {
+    if (a.getAttribute('href') === current) a.classList.add('active');
+  });
+});
+
+const api = async (path, options = {}, auth = true) => {
+  const url = path.startsWith('http') ? path : APP + path;
+  const headers = { 'content-type': 'application/json', ...(options.headers || {}) };
+  if (auth && _getToken()) headers.authorization = 'Bearer ' + _getToken();
+  const res = await fetch(url, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { _setToken(null); _setUser(null); window.location.replace(APP + '/portal/login'); }
+  if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
   return data;
 };
-const setStatus = (id, msg, isError = false) => {
+
+const showAlert = (id, msg, type = 'info') => {
   const el = document.getElementById(id);
   if (!el) return;
+  el.className = 'alert alert-' + type;
   el.textContent = msg;
-  el.classList.toggle("error", !!isError);
 };
-const escapeHtml = (value) => String(value ?? "")
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;")
-  .replaceAll("'", "&#39;");
-const formatDateTime = (input) => {
-  if (!input) return "Not available";
-  const normalized = String(input).replace(" ", "T");
-  const maybeDate = new Date(normalized.endsWith("Z") ? normalized : normalized + "Z");
-  if (Number.isNaN(maybeDate.getTime())) return String(input);
-  return maybeDate.toLocaleString();
+const clearAlert = id => { const el = document.getElementById(id); if (el) { el.className = 'alert'; el.textContent = ''; } };
+
+const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const fmtDate = v => { if (!v) return '—'; const d = new Date(String(v).replace(' ','T') + (String(v).endsWith('Z') ? '' : 'Z')); return isNaN(d) ? String(v) : d.toLocaleDateString('en-ZA', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); };
+const fmtRand = cents => 'R' + (Number(cents || 0) / 100).toFixed(2);
+const statusBadge = s => {
+  const m = {paid:'green', open:'yellow', closed:'blue', failed:'red', pending:'yellow', live:'green', draft:'blue'};
+  return '<span class="badge badge-' + (m[s] || 'blue') + '">' + esc(s) + '</span>';
 };
-const centsToRand = (value) => {
-  const numeric = Number(value || 0);
-  return "R" + (numeric / 100).toFixed(2);
+
+const logout = () => { _setToken(null); _setUser(null); window.location.replace(APP + '/portal/login'); };
+`;
+
+// ── Admin shared JS ───────────────────────────
+const ADMIN_SCRIPT = `
+const APP = window.__UBANI_ORIGIN || window.location.origin;
+const _adminKey = () => sessionStorage.getItem('ubani_akey') || '';
+const _setAdminKey = k => sessionStorage.setItem('ubani_akey', k);
+
+const adminApi = async path => {
+  const key = _adminKey();
+  if (!key) throw new Error('No admin key set');
+  const res = await fetch(APP + path, { headers: { 'x-admin-key': key } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
+  return data;
 };
-const statusChip = (value) => {
-  const raw = String(value || "pending").toLowerCase();
-  const allowed = raw === "paid" || raw === "failed" ? raw : "pending";
-  return "<span class=\\"status-chip " + allowed + "\\">" + escapeHtml(raw) + "</span>";
+
+const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const fmtDate = v => { if (!v) return '—'; const d = new Date(String(v).replace(' ','T') + (String(v).endsWith('Z') ? '' : 'Z')); return isNaN(d) ? String(v) : d.toLocaleDateString('en-ZA', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); };
+const fmtRand = cents => 'R' + (Number(cents || 0) / 100).toFixed(2);
+const statusBadge = s => {
+  const m = {paid:'green', open:'yellow', closed:'blue', failed:'red', pending:'yellow', live:'green', draft:'blue'};
+  return '<span class="badge badge-' + (m[s] || 'blue') + '">' + esc(s) + '</span>';
+};
+
+// Auto-restore admin key & load data on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const inp = document.getElementById('adminKeyInput');
+  if (inp && _adminKey()) {
+    inp.value = _adminKey();
+    document.getElementById('autoLoadTrigger') && document.getElementById('autoLoadTrigger').click();
+  }
+  const current = window.location.pathname;
+  document.querySelectorAll('.sidebar-nav a').forEach(a => {
+    if (a.getAttribute('href') === current) a.classList.add('active');
+  });
+});
+
+const saveKey = () => {
+  const k = document.getElementById('adminKeyInput')?.value.trim();
+  if (k) _setAdminKey(k);
 };
 `;
 
-export function renderFrontend(pathname, apiOrigin) {
-  if (pathname === "/") {
-    return shell({
-      title: "Ubani Hosting | Fast Hosting for South Africa",
-      nav: marketingNav(),
-      apiOrigin,
-      body: `
-      <section class="hero hosting reveal">
-        <span class="eyebrow">Ubani Platform</span>
-        <h1>Design, Hosting, Billing,<br/>and Support in One Stack</h1>
-        <p>A cleaner way to run client website operations: launch projects, track billing, and manage support from one platform.</p>
-        <p>
-          <span class="pill">Project Deployments</span>
-          <span class="pill">Yoco Billing</span>
-          <span class="pill">Admin Reporting</span>
-          <span class="pill">Ticket Workflow</span>
-        </p>
-        <div class="cta-row">
-          <a class="cta" href="/portal/register">Open Client Portal</a>
-          <a class="cta ghost" href="/pricing">View Plans</a>
-        </div>
-        <div class="stat-strip">
-          <div class="stat"><strong>API + Frontend</strong><span>Single deployment surface</span></div>
-          <div class="stat"><strong>R0 Launch Stack</strong><span>Cloudflare-first architecture</span></div>
-          <div class="stat"><strong>SA Payments</strong><span>Yoco checkout flow integrated</span></div>
-        </div>
-      </section>
-      <section class="grid three">
-        <article class="card reveal" data-delay="1">
-          <img class="thumb" src="${PANEL_1_URL}" alt="Design preview panel 1" />
-          <h3>Platform Coverage</h3>
-          <ul>
-            <li>Account registration and authentication APIs</li>
-            <li>Project deployment and storage tracking</li>
-            <li>Invoice and checkout session creation</li>
-            <li>Support tickets and admin reporting endpoints</li>
-          </ul>
-        </article>
-        <article class="card reveal" data-delay="2">
-          <img class="thumb" src="${PANEL_2_URL}" alt="Design preview panel 2" />
-          <h3>Delivery Flow</h3>
-          <p><strong>1.</strong> Scope your project in the portal</p>
-          <p><strong>2.</strong> Build and deploy from dashboard tools</p>
-          <p><strong>3.</strong> Track billing and support in production</p>
-        </article>
-        <article class="card accent reveal" data-delay="3">
-          <img class="thumb" src="${PANEL_3_URL}" alt="Design preview panel 3" />
-          <h3>Project Planning</h3>
-          <p>Share your timeline and target outcome. We’ll align platform setup, design scope, and delivery sequencing.</p>
-          <p style="margin-top:12px;"><a class="cta" href="/contact">Book Discovery</a></p>
-        </article>
-      </section>
-      <section class="grid two" style="margin-top:14px;">
-        <article class="card reveal">
-          <h3>Frequently Asked</h3>
-          <p><strong>Can we use our own domain?</strong> Yes, domains are mapped through your Cloudflare zone.</p>
-          <p><strong>Can your team handle support flows?</strong> Yes, ticketing and admin controls are built in.</p>
-          <p><strong>Can we start free?</strong> Yes, use the Free plan and upgrade when traffic grows.</p>
-        </article>
-        <article class="card reveal" data-delay="1">
-          <h3>Primary Next Step</h3>
-          <p>Create an account, deploy your first project, then test billing + support from the same dashboard.</p>
-          <p style="margin-top:12px;"><a class="cta" href="/portal/register">Create Account</a></p>
-        </article>
-      </section>`
-    });
-  }
+// ── HTML shell builders ───────────────────────
 
-  if (pathname === "/pricing") {
-    return shell({
-      title: "Pricing | Ubani Hosting",
-      nav: marketingNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>Simple pricing, serious performance</h1><p>Start free, then scale to agency-grade operations.</p></section>
-      <section class="grid three">
-        <article class="card reveal"><h3>Free</h3><p>R0/mo</p><ul><li>1 site</li><li>500MB storage</li><li>ubani subdomain</li></ul></article>
-        <article class="card accent reveal" data-delay="1"><h3>Starter</h3><p>R99/mo</p><ul><li>5 sites</li><li>10GB storage</li><li>Custom domains</li><li>Yoco billing</li></ul></article>
-        <article class="card reveal" data-delay="2"><h3>Agency</h3><p>R299/mo</p><ul><li>Unlimited clients</li><li>Priority support</li><li>Admin + team workflows</li></ul></article>
-      </section>`
-    });
-  }
+function mktShell({ title, body, path = '/' }) {
+  const navLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/pricing', label: 'Pricing' },
+    { href: '/hosting', label: 'Hosting' },
+    { href: '/contact', label: 'Contact' },
+  ].map(l => `<a href="${l.href}" class="mkt-nav-link${path === l.href ? ' active' : ''}">${l.label}</a>`).join('');
 
-  if (pathname === "/hosting") {
-    return shell({
-      title: "Hosting | Ubani Hosting",
-      nav: marketingNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>Hosting products built for velocity</h1><p>Everything needed to launch client sites quickly and safely.</p></section>
-      <section class="grid two">
-        <article class="card reveal"><h3>Static + API</h3><p>Upload and deploy with project-level tracking and storage accounting.</p></article>
-        <article class="card reveal" data-delay="1"><h3>Billing-native</h3><p>Invoice checkout creation and webhook-based payment state sync.</p></article>
-        <article class="card reveal" data-delay="2"><h3>Support workflow</h3><p>Native support ticket endpoints for operations and retention.</p></article>
-        <article class="card reveal" data-delay="3"><h3>Admin analytics</h3><p>Live user counts, invoice totals, and paid revenue summaries.</p></article>
-      </section>`
-    });
-  }
-
-  if (pathname === "/contact") {
-    return shell({
-      title: "Contact | Ubani Hosting",
-      nav: marketingNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>Let’s launch your platform</h1><p>Sales and support channels for founders, dev teams, and agencies.</p></section>
-      <section class="grid two">
-        <article class="card reveal"><p>Sales: sales@ubanihosting.co.za</p><p>Support: support@ubanihosting.co.za</p><p>Partnerships: partners@ubanihosting.co.za</p></article>
-        <article class="card accent reveal" data-delay="1"><h3>Want instant access?</h3><p>Create your account and deploy in minutes.</p><p><a class="cta" href="/portal/register">Open Client Portal</a></p></article>
-      </section>`
-    });
-  }
-
-  if (pathname === "/portal" || pathname === "/portal/dashboard") {
-    return shell({
-      title: "Portal Dashboard | Ubani Hosting",
-      nav: portalNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>Client Dashboard</h1><p>Manage account, deploy projects, and monitor billing from one place.</p></section>
-      <section class="grid two">
-        <article class="card reveal">
-          <h3>Account</h3>
-          <button id="loadMe">Load Profile</button>
-          <div id="meStatus" class="status"></div>
-          <div id="meData" class="profile-output">
-            <p class="profile-placeholder">Sign in first, then click <strong>Load Profile</strong>.</p>
-          </div>
-        </article>
-        <article class="card reveal" data-delay="1">
-          <h3>Quick Deploy</h3>
-          <div class="row"><label>Domain</label><input id="deployDomain" placeholder="example.co.za" /></div>
-          <button id="deployBtn">Deploy Sample Site</button>
-          <div id="deployStatus" class="status"></div>
-        </article>
-      </section>`,
-      script: `${portalScript}
-const renderProfile = (payload) => {
-  const user = payload && payload.user ? payload.user : {};
-  return \`
-    <div class="profile-grid">
-      <div class="profile-item">
-        <span class="label">User ID</span>
-        <div class="value">\${escapeHtml(user.id || "Not available")}</div>
-      </div>
-      <div class="profile-item">
-        <span class="label">Email</span>
-        <div class="value">\${escapeHtml(user.email || "Not available")}</div>
-      </div>
-      <div class="profile-item">
-        <span class="label">Credit</span>
-        <div class="value">\${escapeHtml(String(user.credit ?? 0))}</div>
-      </div>
-      <div class="profile-item">
-        <span class="label">Created</span>
-        <div class="value">\${escapeHtml(formatDateTime(user.created_at))}</div>
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="description" content="Ubani Hosting — Web design, hosting and client management for South African businesses."/>
+  <title>${title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>${CSS}</style>
+</head>
+<body>
+  <header class="mkt-header">
+    <div class="mkt-header-inner">
+      <a href="/" class="wordmark" style="text-decoration:none">
+        <div class="wordmark-dot"></div>Ubani Hosting
+      </a>
+      <nav class="mkt-nav">
+        ${navLinks}
+      </nav>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a href="/portal/login" class="btn btn-ghost" style="font-size:13px">Sign in</a>
+        <a href="/portal/register" class="btn btn-primary">Get started</a>
       </div>
     </div>
-    <details class="profile-raw">
-      <summary>Show raw profile JSON</summary>
-      <pre>\${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
-    </details>
-  \`;
-};
-document.getElementById("loadMe").onclick = async () => {
-  try {
-    setStatus("meStatus", "Loading...");
-    const data = await api("/api/me", {}, true);
-    document.getElementById("meData").innerHTML = renderProfile(data);
-    setStatus("meStatus", "Loaded.");
-  } catch (error) { setStatus("meStatus", error.message, true); }
-};
-document.getElementById("deployBtn").onclick = async () => {
-  try {
-    setStatus("deployStatus", "Deploying...");
-    const domain = document.getElementById("deployDomain").value.trim() || ("demo-" + Date.now() + ".co.za");
-    const data = await api("/api/deploy", {
-      method: "POST",
-      body: JSON.stringify({
-        domain,
-        files: [{ name: "index.html", contentType: "text/html", content: "<h1>Ubani Deployment Live</h1>" }]
-      })
-    }, true);
-    setStatus("deployStatus", "Live: " + data.projectId);
-  } catch (error) { setStatus("deployStatus", error.message, true); }
-};`
-    });
-  }
-
-  if (pathname === "/portal/login") {
-    return shell({
-      title: "Login | Ubani Hosting",
-      nav: portalNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>Welcome back</h1><p>Sign in to manage sites, invoices, and support.</p></section>
-      <section class="grid two">
-        <article class="card reveal">
-          <div class="row"><label>Email</label><input id="email" type="email" /></div>
-          <div class="row"><label>Password</label><input id="password" type="password" /></div>
-          <button id="loginBtn">Sign In</button>
-          <div id="loginStatus" class="status"></div>
-        </article>
-      </section>`,
-      script: `${portalScript}
-document.getElementById("loginBtn").onclick = async () => {
-  try {
-    setStatus("loginStatus", "Signing in...");
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const data = await api("/api/login", { method: "POST", body: JSON.stringify({ email, password }) });
-    writeToken(data.token);
-    setStatus("loginStatus", "Success. Redirecting...");
-    setTimeout(() => location.href = APP_ORIGIN + "/portal/dashboard", 400);
-  } catch (error) { setStatus("loginStatus", error.message, true); }
-};`
-    });
-  }
-
-  if (pathname === "/portal/register") {
-    return shell({
-      title: "Register | Ubani Hosting",
-      nav: portalNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>Create your account</h1><p>Start with free hosting and scale as your business grows.</p></section>
-      <section class="grid two">
-        <article class="card reveal">
-          <div class="row"><label>Email</label><input id="email" type="email" /></div>
-          <div class="row"><label>Password</label><input id="password" type="password" /></div>
-          <button id="registerBtn">Create Account</button>
-          <div id="registerStatus" class="status"></div>
-        </article>
-      </section>`,
-      script: `${portalScript}
-document.getElementById("registerBtn").onclick = async () => {
-  try {
-    setStatus("registerStatus", "Creating...");
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const data = await api("/api/register", { method: "POST", body: JSON.stringify({ email, password }) });
-    writeToken(data.token);
-    setStatus("registerStatus", "Success. Redirecting...");
-    setTimeout(() => location.href = APP_ORIGIN + "/portal/dashboard", 400);
-  } catch (error) { setStatus("registerStatus", error.message, true); }
-};`
-    });
-  }
-
-  if (pathname === "/portal/billing") {
-    return shell({
-      title: "Billing | Ubani Hosting",
-      nav: portalNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>Billing</h1><p>Create checkout sessions and inspect invoice history instantly.</p></section>
-      <section class="grid two">
-        <article class="card reveal">
-          <div class="row"><label>Amount (cents)</label><input id="amount" value="9900" /></div>
-          <button id="checkoutBtn">Create Yoco Checkout</button>
-          <div id="checkoutStatus" class="status"></div>
-        </article>
-        <article class="card reveal" data-delay="1">
-          <h3>Invoices</h3>
-          <button id="loadInvoices">Refresh</button>
-          <div id="invoicesData" class="profile-output">
-            <p class="profile-placeholder">No invoice data loaded yet.</p>
-          </div>
-        </article>
-      </section>`,
-      script: `${portalScript}
-const renderInvoices = (payload) => {
-  const invoices = Array.isArray(payload && payload.invoices) ? payload.invoices : [];
-  if (!invoices.length) return '<p class="profile-placeholder">No invoices found for this account.</p>';
-  return \`
-    <ul class="stack-list">
-      \${invoices.map((invoice) => \`
-        <li>
-          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-            <strong>\${escapeHtml(centsToRand(invoice.amount))}</strong>
-            \${statusChip(invoice.status)}
-          </div>
-          <div class="inline-meta">
-            <span>ID: \${escapeHtml(invoice.id)}</span>
-            <span>Created: \${escapeHtml(formatDateTime(invoice.created_at))}</span>
-          </div>
-        </li>
-      \`).join("")}
-    </ul>
-  \`;
-};
-document.getElementById("checkoutBtn").onclick = async () => {
-  try {
-    setStatus("checkoutStatus", "Creating...");
-    const amount = Number(document.getElementById("amount").value);
-    const data = await api("/api/invoice/checkout", { method: "POST", body: JSON.stringify({ amount }) }, true);
-    if (data.checkoutUrl) window.open(data.checkoutUrl, "_blank", "noopener,noreferrer");
-    setStatus("checkoutStatus", "Invoice " + data.invoiceId + " created.");
-    document.getElementById("loadInvoices").click();
-  } catch (error) { setStatus("checkoutStatus", error.message, true); }
-};
-document.getElementById("loadInvoices").onclick = async () => {
-  try {
-    const data = await api("/api/invoices", {}, true);
-    document.getElementById("invoicesData").innerHTML = renderInvoices(data);
-  } catch (error) {
-    document.getElementById("invoicesData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
-  }
-};`
-    });
-  }
-
-  if (pathname === "/portal/projects") {
-    return shell({
-      title: "Projects | Ubani Hosting",
-      nav: portalNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>Projects</h1><p>Create deployments and inspect all projects linked to your account.</p></section>
-      <section class="grid two">
-        <article class="card reveal">
-          <h3>Create Project</h3>
-          <div class="row"><label>Domain</label><input id="projectDomain" placeholder="myproject.co.za" /></div>
-          <button id="createProjectBtn">Create Project</button>
-          <div id="createProjectStatus" class="status"></div>
-          <p style="margin-top:8px;">Creates a new deployment with a starter <code>index.html</code> file and stores it in your account.</p>
-        </article>
-        <article class="card reveal" data-delay="1">
-          <h3>Your Deployments</h3>
-          <button id="loadProjects">Load Projects</button>
-          <div id="projectsData" class="profile-output">
-            <p class="profile-placeholder">No projects loaded yet.</p>
-          </div>
-        </article>
-      </section>`,
-      script: `${portalScript}
-const renderProjects = (payload) => {
-  const projects = Array.isArray(payload && payload.projects) ? payload.projects : [];
-  if (!projects.length) return '<p class="profile-placeholder">No deployments yet. Use "Create Project" to start.</p>';
-  return \`
-    <ul class="stack-list">
-      \${projects.map((project) => \`
-        <li>
-          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-            <strong>\${escapeHtml(project.domain || "Untitled domain")}</strong>
-            <span>\${escapeHtml(String(project.storage || 0))} bytes</span>
-          </div>
-          <div class="inline-meta">
-            <span>Project ID: \${escapeHtml(project.id)}</span>
-            <span>Created: \${escapeHtml(formatDateTime(project.created_at))}</span>
-          </div>
-        </li>
-      \`).join("")}
-    </ul>
-  \`;
-};
-document.getElementById("createProjectBtn").onclick = async () => {
-  try {
-    setStatus("createProjectStatus", "Creating project...");
-    const domain = document.getElementById("projectDomain").value.trim() || ("project-" + Date.now() + ".co.za");
-    const data = await api("/api/deploy", {
-      method: "POST",
-      body: JSON.stringify({
-        domain,
-        files: [{ name: "index.html", contentType: "text/html", content: "<h1>Project created and live</h1>" }]
-      })
-    }, true);
-    setStatus("createProjectStatus", "Created and deployed. Project ID: " + data.projectId);
-    document.getElementById("loadProjects").click();
-  } catch (error) {
-    setStatus("createProjectStatus", error.message, true);
-  }
-};
-document.getElementById("loadProjects").onclick = async () => {
-  try {
-    const data = await api("/api/projects", {}, true);
-    document.getElementById("projectsData").innerHTML = renderProjects(data);
-  } catch (error) {
-    document.getElementById("projectsData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
-  }
-};`
-    });
-  }
-
-  if (pathname === "/portal/support") {
-    return shell({
-      title: "Support | Ubani Hosting",
-      nav: portalNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>Support Center</h1><p>Create and track tickets without leaving your dashboard.</p></section>
-      <section class="grid two">
-        <article class="card reveal">
-          <div class="row"><label>Subject</label><input id="subject" placeholder="Need help with deployment" /></div>
-          <button id="createTicketBtn">Create Ticket</button>
-          <div id="ticketStatus" class="status"></div>
-        </article>
-        <article class="card reveal" data-delay="1">
-          <button id="loadTicketsBtn">Load My Tickets</button>
-          <div id="ticketsData" class="profile-output">
-            <p class="profile-placeholder">No ticket data loaded yet.</p>
-          </div>
-        </article>
-      </section>`,
-      script: `${portalScript}
-const renderTickets = (payload) => {
-  const tickets = Array.isArray(payload && payload.tickets) ? payload.tickets : [];
-  if (!tickets.length) return '<p class="profile-placeholder">No support tickets yet.</p>';
-  return \`
-    <ul class="stack-list">
-      \${tickets.map((ticket) => \`
-        <li>
-          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-            <strong>\${escapeHtml(ticket.subject || "Untitled ticket")}</strong>
-            \${statusChip(ticket.status)}
-          </div>
-          <div class="inline-meta">
-            <span>Ticket ID: \${escapeHtml(ticket.id)}</span>
-            <span>Created: \${escapeHtml(formatDateTime(ticket.created_at))}</span>
-          </div>
-        </li>
-      \`).join("")}
-    </ul>
-  \`;
-};
-document.getElementById("createTicketBtn").onclick = async () => {
-  try {
-    setStatus("ticketStatus", "Submitting...");
-    const subject = document.getElementById("subject").value.trim();
-    const data = await api("/api/support/tickets", { method: "POST", body: JSON.stringify({ subject }) }, true);
-    setStatus("ticketStatus", "Ticket created: " + data.ticket.id);
-    document.getElementById("loadTicketsBtn").click();
-  } catch (error) { setStatus("ticketStatus", error.message, true); }
-};
-document.getElementById("loadTicketsBtn").onclick = async () => {
-  try {
-    const data = await api("/api/support/tickets", {}, true);
-    document.getElementById("ticketsData").innerHTML = renderTickets(data);
-  } catch (error) {
-    document.getElementById("ticketsData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
-  }
-};`
-    });
-  }
-
-  if (pathname === "/admin/dashboard") {
-    return shell({
-      title: "Admin Dashboard | Ubani Hosting",
-      nav: adminNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>Admin Command Center</h1><p>Monitor growth and platform health in real time.</p></section>
-      <section class="grid two">
-        <article class="card reveal">
-          <div class="row"><label>Admin API Key</label><input id="adminKey" type="password" /></div>
-          <button id="loadSummaryBtn">Load Summary</button>
-          <div id="summaryData" class="profile-output">
-            <p class="profile-placeholder">No summary data loaded yet.</p>
-          </div>
-        </article>
-      </section>`,
-      script: `
-const escapeHtml = (value) => String(value ?? "")
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;")
-  .replaceAll("'", "&#39;");
-const adminApi = async (path) => {
-  const key = document.getElementById("adminKey").value.trim();
-  const response = await fetch(path, { headers: { "x-admin-key": key } });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
-  return data;
-};
-document.getElementById("loadSummaryBtn").onclick = async () => {
-  try {
-    const data = await adminApi("/api/admin/summary");
-    document.getElementById("summaryData").innerHTML = \`
-      <div class="profile-grid">
-        <div class="profile-item"><span class="label">Users</span><div class="value">\${escapeHtml(data.users)}</div></div>
-        <div class="profile-item"><span class="label">Projects</span><div class="value">\${escapeHtml(data.projects)}</div></div>
-        <div class="profile-item"><span class="label">Invoices</span><div class="value">\${escapeHtml(data.invoices)}</div></div>
-        <div class="profile-item"><span class="label">Paid Revenue</span><div class="value">R\${escapeHtml((Number(data.paidRevenueCents || 0) / 100).toFixed(2))}</div></div>
+  </header>
+  <main class="mkt-main">
+    ${body}
+  </main>
+  <footer class="mkt-footer">
+    <div style="max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px">
+      <span>© ${new Date().getFullYear()} Ubani Hosting · Built for South Africa</span>
+      <div style="display:flex;gap:20px">
+        <a href="/pricing">Pricing</a>
+        <a href="/hosting">Hosting</a>
+        <a href="/contact">Contact</a>
+        <a href="/portal/login">Client Portal</a>
       </div>
-    \`;
-  } catch (error) {
-    document.getElementById("summaryData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
-  }
-};`
-    });
-  }
-
-  if (pathname === "/admin/users") {
-    return shell({
-      title: "Admin Users | Ubani Hosting",
-      nav: adminNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>User Management</h1><p>Review account creation velocity and customer profiles.</p></section>
-      <section class="grid two">
-        <article class="card reveal">
-          <div class="row"><label>Admin API Key</label><input id="adminKey" type="password" /></div>
-          <button id="loadUsersBtn">Load Users</button>
-          <div id="usersData" class="profile-output">
-            <p class="profile-placeholder">No users loaded yet.</p>
-          </div>
-        </article>
-      </section>`,
-      script: `
-const escapeHtml = (value) => String(value ?? "")
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;")
-  .replaceAll("'", "&#39;");
-const formatDateTime = (input) => {
-  if (!input) return "Not available";
-  const normalized = String(input).replace(" ", "T");
-  const maybeDate = new Date(normalized.endsWith("Z") ? normalized : normalized + "Z");
-  if (Number.isNaN(maybeDate.getTime())) return String(input);
-  return maybeDate.toLocaleString();
-};
-document.getElementById("loadUsersBtn").onclick = async () => {
-  try {
-    const key = document.getElementById("adminKey").value.trim();
-    const response = await fetch("/api/admin/users", { headers: { "x-admin-key": key } });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
-    const users = Array.isArray(data.users) ? data.users : [];
-    if (!users.length) {
-      document.getElementById("usersData").innerHTML = '<p class="profile-placeholder">No users found.</p>';
-      return;
-    }
-    document.getElementById("usersData").innerHTML = \`
-      <ul class="stack-list">
-        \${users.map((user) => \`
-          <li>
-            <strong>\${escapeHtml(user.email || "No email")}</strong>
-            <div class="inline-meta">
-              <span>ID: \${escapeHtml(user.id)}</span>
-              <span>Credit: \${escapeHtml(String(user.credit ?? 0))}</span>
-              <span>Created: \${escapeHtml(formatDateTime(user.created_at))}</span>
-            </div>
-          </li>
-        \`).join("")}
-      </ul>
-    \`;
-  } catch (error) {
-    document.getElementById("usersData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
-  }
-};`
-    });
-  }
-
-  if (pathname === "/admin/revenue") {
-    return shell({
-      title: "Admin Revenue | Ubani Hosting",
-      nav: adminNav(),
-      apiOrigin,
-      body: `
-      <section class="hero reveal"><h1>Revenue Analytics</h1><p>Track payment state and monetization in one view.</p></section>
-      <section class="grid two">
-        <article class="card reveal">
-          <div class="row"><label>Admin API Key</label><input id="adminKey" type="password" /></div>
-          <button id="loadRevenueBtn">Load Revenue</button>
-          <div id="revenueData" class="profile-output">
-            <p class="profile-placeholder">No revenue data loaded yet.</p>
-          </div>
-        </article>
-      </section>`,
-      script: `
-const escapeHtml = (value) => String(value ?? "")
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;")
-  .replaceAll("'", "&#39;");
-const formatDateTime = (input) => {
-  if (!input) return "Not available";
-  const normalized = String(input).replace(" ", "T");
-  const maybeDate = new Date(normalized.endsWith("Z") ? normalized : normalized + "Z");
-  if (Number.isNaN(maybeDate.getTime())) return String(input);
-  return maybeDate.toLocaleString();
-};
-document.getElementById("loadRevenueBtn").onclick = async () => {
-  try {
-    const key = document.getElementById("adminKey").value.trim();
-    const response = await fetch("/api/admin/revenue", { headers: { "x-admin-key": key } });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
-    const totals = Array.isArray(data.totals) ? data.totals : [];
-    const latestPaid = Array.isArray(data.latestPaid) ? data.latestPaid : [];
-    document.getElementById("revenueData").innerHTML = \`
-      <h4 style="margin:0 0 8px;">Status Totals</h4>
-      <ul class="stack-list" style="margin-bottom:10px;">
-        \${totals.length ? totals.map((item) => \`
-          <li>
-            <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-              <strong>\${escapeHtml(item.status || "unknown")}</strong>
-              <span>R\${escapeHtml((Number(item.cents || 0) / 100).toFixed(2))}</span>
-            </div>
-            <div class="inline-meta"><span>Invoices: \${escapeHtml(item.count)}</span></div>
-          </li>
-        \`).join("") : '<li><span class="profile-placeholder">No totals available.</span></li>'}
-      </ul>
-      <h4 style="margin:0 0 8px;">Latest Paid Invoices</h4>
-      <ul class="stack-list">
-        \${latestPaid.length ? latestPaid.map((invoice) => \`
-          <li>
-            <strong>\${escapeHtml(invoice.id)}</strong>
-            <div class="inline-meta">
-              <span>User: \${escapeHtml(invoice.user_id)}</span>
-              <span>Amount: R\${escapeHtml((Number(invoice.amount || 0) / 100).toFixed(2))}</span>
-              <span>Created: \${escapeHtml(formatDateTime(invoice.created_at))}</span>
-            </div>
-          </li>
-        \`).join("") : '<li><span class="profile-placeholder">No paid invoices yet.</span></li>'}
-      </ul>
-    \`;
-  } catch (error) {
-    document.getElementById("revenueData").innerHTML = '<p class="profile-placeholder">' + escapeHtml(error.message) + '</p>';
-  }
-};`
-    });
-  }
-
-  return null;
+    </div>
+  </footer>
+</body>
+</html>`;
 }
 
-export function renderDesignerLanding(apiOrigin) {
-  return shell({
-    title: "Ubani Studio | Web Design & Build",
-    nav: [
-      `<a href="/"><strong>Studio</strong></a>`,
-      `<a href="${apiOrigin}/portal/register">Client Portal</a>`,
-      `<a href="${apiOrigin}/contact">Contact</a>`
-    ].join(""),
-      apiOrigin,
-      body: `
-      <section class="hero hosting reveal" style="background:
-      linear-gradient(180deg, rgba(6,13,31,0.72), rgba(6,13,31,0.92)),
-      url('${LANDING_ART_URL}') center/cover no-repeat;">
-      <span class="eyebrow">Ubani Studio</span>
-      <h1>Web Design Studio<br/>for South African Brands</h1>
-      <p>Modern interface design, production frontend builds, and deployment support for businesses that need a stronger web presence.</p>
-      <p>
-        <span class="pill">Branding</span>
-        <span class="pill">Web Design</span>
-        <span class="pill">Production Build</span>
-      </p>
-      <div class="cta-row">
-        <a class="cta" href="${apiOrigin}/portal/register">Start a Project</a>
-        <a class="cta ghost" href="${apiOrigin}/contact">Book Discovery</a>
+function portalShell({ title, body, script = '', path = '', apiOrigin = '' }) {
+  const navItems = [
+    { href: '/portal/dashboard', icon: '⊞', label: 'Dashboard' },
+    { href: '/portal/projects',  icon: '◈', label: 'Projects'  },
+    { href: '/portal/billing',   icon: '◎', label: 'Billing'   },
+    { href: '/portal/support',   icon: '◷', label: 'Support'   },
+  ];
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>${title} | Ubani Hosting</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>${CSS}</style>
+</head>
+<body>
+  <div class="portal-wrap">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <a href="/" class="sidebar-wordmark" style="text-decoration:none;color:var(--text)">
+          <div class="wordmark-dot"></div>Ubani Hosting
+        </a>
       </div>
-    </section>
-    <section class="grid three">
-      <article class="card reveal" data-delay="1"><img class="thumb" src="${PANEL_1_URL}" alt="Studio work sample 1" /><h3>Design System</h3><p>Layout hierarchy, typography, and component language aligned to your brand.</p></article>
-      <article class="card reveal" data-delay="2"><img class="thumb" src="${PANEL_2_URL}" alt="Studio work sample 2" /><h3>Build Delivery</h3><p>Production-ready frontend build with clear asset structure and deployment paths.</p></article>
-      <article class="card reveal" data-delay="3"><img class="thumb" src="${PANEL_3_URL}" alt="Studio work sample 3" /><h3>Post-Launch</h3><p>Iteration support for content updates, performance tuning, and feature refinement.</p></article>
-    </section>
-    <section class="grid two" style="margin-top:14px;">
-      <article class="card reveal"><h3>FAQ</h3><p><strong>Do you redesign existing sites?</strong> Yes, we can work from a live or legacy codebase.</p><p><strong>Can design and hosting be bundled?</strong> Yes, this studio flow is connected to the hosting platform.</p></article>
-      <article class="card reveal" data-delay="1"><h3>Start Here</h3><p>Open the portal, add your scope, and we’ll move your project into the design/build pipeline.</p><p style="margin-top:12px;"><a class="cta" href="${apiOrigin}/portal/register">Open Portal</a></p></article>
-    </section>`
+      <div class="sidebar-section-label">Client Portal</div>
+      <nav class="sidebar-nav">
+        ${navItems.map(i => `<a href="${i.href}"><span class="icon">${i.icon}</span>${i.label}</a>`).join('')}
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-user">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div class="user-info">
+            <div class="user-email" id="userEmail">Loading...</div>
+            <div class="user-plan" id="userPlan">Free Plan</div>
+          </div>
+        </div>
+        <button onclick="logout()" class="btn btn-danger" style="width:100%;margin-top:8px;font-size:12px">Sign out</button>
+      </div>
+    </aside>
+    <div class="portal-content">
+      <div class="portal-topbar">
+        <h1>${title}</h1>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:12px;color:var(--muted)" id="topbarEmail"></span>
+        </div>
+      </div>
+      <div class="portal-main">
+        ${body}
+      </div>
+    </div>
+  </div>
+  <script>
+    window.__UBANI_ORIGIN = ${JSON.stringify(apiOrigin || '')};
+    ${PORTAL_SCRIPT}
+    ${script}
+    // Update topbar email
+    window.addEventListener('DOMContentLoaded', () => {
+      const u = _getUser();
+      const el = document.getElementById('topbarEmail');
+      if (u && el) el.textContent = u.email;
+    });
+  </script>
+</body>
+</html>`;
+}
+
+function adminShell({ title, body, script = '', apiOrigin = '' }) {
+  const navItems = [
+    { href: '/admin/dashboard', icon: '⊞', label: 'Overview'  },
+    { href: '/admin/users',     icon: '◎', label: 'Users'     },
+    { href: '/admin/revenue',   icon: '◈', label: 'Revenue'   },
+    { href: '/admin/tickets',   icon: '◷', label: 'Tickets'   },
+  ];
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>${title} | Ubani Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>${CSS}
+  .sidebar { background: #0a0c10; }
+  .sidebar-section-label::before { content: ''; }
+  </style>
+</head>
+<body>
+  <div class="portal-wrap">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <a href="/" class="sidebar-wordmark" style="text-decoration:none;color:var(--text)">
+          <div class="wordmark-dot"></div>Admin Panel
+        </a>
+      </div>
+      <div class="sidebar-section-label">Management</div>
+      <nav class="sidebar-nav">
+        ${navItems.map(i => `<a href="${i.href}"><span class="icon">${i.icon}</span>${i.label}</a>`).join('')}
+        <hr style="border:none;border-top:1px solid var(--border);margin:8px 0"/>
+        <a href="/portal/dashboard"><span class="icon">←</span>Client Portal</a>
+        <a href="/"><span class="icon">⌂</span>Marketing Site</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div style="padding:8px 10px">
+          <div class="form-label">Admin Key</div>
+          <input id="adminKeyInput" type="password" class="form-input" placeholder="Enter admin key" oninput="saveKey()" style="font-size:12px"/>
+        </div>
+      </div>
+    </aside>
+    <div class="portal-content">
+      <div class="portal-topbar">
+        <h1>${title}</h1>
+        <span class="badge badge-red" style="font-size:11px">Admin Access</span>
+      </div>
+      <div class="portal-main">
+        ${body}
+      </div>
+    </div>
+  </div>
+  <script>
+    window.__UBANI_ORIGIN = ${JSON.stringify(apiOrigin || '')};
+    ${ADMIN_SCRIPT}
+    ${script}
+  </script>
+</body>
+</html>`;
+}
+
+function authShell({ title, body, script = '', apiOrigin = '' }) {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>${title} | Ubani Hosting</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>${CSS}</style>
+</head>
+<body>
+  <div class="auth-wrap">
+    ${body}
+  </div>
+  <script>
+    window.__UBANI_ORIGIN = ${JSON.stringify(apiOrigin || '')};
+    const APP = window.__UBANI_ORIGIN || window.location.origin;
+    const _K = 'ubani_t';
+    const _getToken = () => localStorage.getItem(_K) || '';
+    const _setToken = v => v ? localStorage.setItem(_K, v) : localStorage.removeItem(_K);
+    const _setUser  = u => u ? localStorage.setItem('ubani_u', JSON.stringify(u)) : localStorage.removeItem('ubani_u');
+    const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    // Already logged in? Go to dashboard
+    if (_getToken() && !window.location.pathname.includes('logout')) {
+      window.location.replace(APP + '/portal/dashboard');
+    }
+
+    const api = async (path, options = {}) => {
+      const res = await fetch(APP + path, {
+        ...options,
+        headers: { 'content-type': 'application/json', ...(options.headers || {}) }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
+      return data;
+    };
+    const showAlert = (id, msg, type='error') => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = 'alert alert-' + type;
+      el.textContent = msg;
+    };
+    ${script}
+  </script>
+</body>
+</html>`;
+}
+
+// ════════════════════════════════════════════════
+//  PAGE RENDERERS
+// ════════════════════════════════════════════════
+
+function pageHome(apiOrigin) {
+  return mktShell({
+    title: 'Ubani Hosting — Web Design & Hosting for South Africa',
+    path: '/',
+    body: `
+    <div class="hero fade-up">
+      <div class="hero-badge"><div class="hero-badge-dot"></div>Now live in South Africa</div>
+      <h1>Web design, hosting &amp;<br/>client management — <em>in one platform</em></h1>
+      <p>Built for SA web designers. Manage clients, deploy sites, send invoices, and handle support without switching tools.</p>
+      <div class="hero-actions">
+        <a href="/portal/register" class="btn btn-primary" style="font-size:15px;padding:10px 22px">Start free →</a>
+        <a href="/pricing" class="btn btn-ghost" style="font-size:15px;padding:10px 22px">View pricing</a>
+      </div>
+    </div>
+
+    <div class="features">
+      <div class="feature-card fade-up fade-up-1">
+        <div class="feature-icon">◈</div>
+        <h3>Client Portal</h3>
+        <p>Every client gets a branded portal to view their project status, pay invoices, and raise support tickets.</p>
+      </div>
+      <div class="feature-card fade-up fade-up-2">
+        <div class="feature-icon">◎</div>
+        <h3>Yoco Billing</h3>
+        <p>Create invoices and collect payment in ZAR via Yoco. Webhook-verified, automatically reconciled.</p>
+      </div>
+      <div class="feature-card fade-up fade-up-3">
+        <div class="feature-icon">◷</div>
+        <h3>Support Tickets</h3>
+        <p>Clients submit tickets; you respond from the admin panel. Full thread history, open/close workflow.</p>
+      </div>
+      <div class="feature-card fade-up fade-up-4">
+        <div class="feature-icon">⊞</div>
+        <h3>Project Tracking</h3>
+        <p>Track every project from scope to live. Status updates, storage tracking, domain mapping included.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">⚡</div>
+        <h3>Cloudflare-Powered</h3>
+        <p>Built on Cloudflare Workers + Turso. Sub-100ms globally distributed, zero cold starts.</p>
+      </div>
+      <div class="feature-card fade-up fade-up-1">
+        <div class="feature-icon">🔒</div>
+        <h3>Secure by Default</h3>
+        <p>PBKDF2 password hashing, JWT auth, rate limiting, and HSTS headers out of the box.</p>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:20px 0 48px">
+      <p style="color:var(--muted);font-size:15px;margin-bottom:20px">Ready to replace your patchwork of tools?</p>
+      <a href="/portal/register" class="btn btn-primary" style="font-size:15px;padding:10px 24px">Create your free account →</a>
+    </div>`
   });
+}
+
+function pagePricing(apiOrigin) {
+  return mktShell({
+    title: 'Pricing — Ubani Hosting',
+    path: '/pricing',
+    body: `
+    <div class="hero fade-up" style="text-align:center;padding-bottom:12px">
+      <div class="hero-badge" style="margin:0 auto 16px"><div class="hero-badge-dot"></div>Simple pricing</div>
+      <h1 style="max-width:560px;margin:0 auto 14px">Start free.<br/>Scale when you're ready.</h1>
+      <p style="margin:0 auto">No contracts, no surprises. All plans include the full platform.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <div class="plan-card fade-up">
+        <div class="plan-name">Free</div>
+        <div class="plan-price">R0<span>/mo</span></div>
+        <div class="plan-desc">Perfect for testing or a single personal project.</div>
+        <ul class="plan-features">
+          <li>1 active project</li>
+          <li>500MB storage</li>
+          <li>Ubani subdomain</li>
+          <li>Client portal access</li>
+          <li>Community support</li>
+        </ul>
+        <a href="/portal/register" class="btn btn-ghost" style="width:100%;justify-content:center">Get started free</a>
+      </div>
+
+      <div class="plan-card featured fade-up fade-up-1">
+        <div class="plan-badge">Most popular</div>
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">R99<span>/mo</span></div>
+        <div class="plan-desc">For designers managing a handful of client sites.</div>
+        <ul class="plan-features">
+          <li>5 active projects</li>
+          <li>10GB storage</li>
+          <li>Custom domains</li>
+          <li>Yoco billing integration</li>
+          <li>Support ticket system</li>
+          <li>Email notifications</li>
+        </ul>
+        <a href="/portal/register" class="btn btn-primary" style="width:100%;justify-content:center">Start with Starter →</a>
+      </div>
+
+      <div class="plan-card fade-up fade-up-2">
+        <div class="plan-name">Agency</div>
+        <div class="plan-price">R299<span>/mo</span></div>
+        <div class="plan-desc">For studios managing multiple clients at scale.</div>
+        <ul class="plan-features">
+          <li>Unlimited projects</li>
+          <li>100GB storage</li>
+          <li>Priority support</li>
+          <li>Admin + team workflows</li>
+          <li>Revenue analytics</li>
+          <li>White-label portal (coming)</li>
+        </ul>
+        <a href="/contact" class="btn btn-ghost" style="width:100%;justify-content:center">Contact sales</a>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:16px 0 40px;color:var(--muted);font-size:13px">
+      All prices in South African Rand (ZAR) · Yoco powers secure checkout · Cancel anytime
+    </div>`
+  });
+}
+
+function pageHosting(apiOrigin) {
+  return mktShell({
+    title: 'Hosting — Ubani Hosting',
+    path: '/hosting',
+    body: `
+    <div class="hero fade-up">
+      <div class="hero-badge"><div class="hero-badge-dot"></div>Infrastructure</div>
+      <h1>Hosting built for<br/>South African velocity</h1>
+      <p>Every project deployed on Cloudflare's global edge. No servers to manage, no capacity planning.</p>
+    </div>
+
+    <div class="features" style="margin-top:0">
+      <div class="feature-card fade-up">
+        <div class="feature-icon">⚡</div>
+        <h3>Edge-first deployment</h3>
+        <p>Static files and API routes served from Cloudflare's 300+ PoPs. SA clients see sub-50ms response times.</p>
+      </div>
+      <div class="feature-card fade-up fade-up-1">
+        <div class="feature-icon">◈</div>
+        <h3>Project-level storage</h3>
+        <p>Each project tracks its own file storage. Upgrade plans as client sites grow without affecting others.</p>
+      </div>
+      <div class="feature-card fade-up fade-up-2">
+        <div class="feature-icon">◎</div>
+        <h3>Billing-native</h3>
+        <p>Invoice creation and Yoco checkout baked in. Accept ZAR payments without a third-party billing tool.</p>
+      </div>
+      <div class="feature-card fade-up fade-up-3">
+        <div class="feature-icon">◷</div>
+        <h3>Turso database</h3>
+        <p>libSQL-powered relational database with global replication. Your data is always close to your clients.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">🔒</div>
+        <h3>Security included</h3>
+        <p>JWT auth, PBKDF2 hashing, rate limiting, HSTS, and CSP headers configured by default on every route.</p>
+      </div>
+      <div class="feature-card fade-up fade-up-1">
+        <div class="feature-icon">⊞</div>
+        <h3>Webhook reconciliation</h3>
+        <p>Yoco webhook signatures verified cryptographically. Payment state always reflects reality.</p>
+      </div>
+    </div>
+
+    <div style="margin:40px 0">
+      <a href="/portal/register" class="btn btn-primary" style="font-size:15px;padding:10px 22px">Deploy your first project →</a>
+    </div>`
+  });
+}
+
+function pageContact(apiOrigin) {
+  return mktShell({
+    title: 'Contact — Ubani Hosting',
+    path: '/contact',
+    body: `
+    <div class="hero fade-up">
+      <div class="hero-badge"><div class="hero-badge-dot"></div>Get in touch</div>
+      <h1>Let's build something<br/>together</h1>
+      <p>Whether you need hosting, a website, or want to discuss agency plans — we're here.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:40px">
+      <div class="card fade-up">
+        <div class="card-header"><h2>Sales &amp; Onboarding</h2></div>
+        <div class="card-body">
+          <p style="color:var(--muted);font-size:13px;margin-bottom:12px">Ready to get started or want to understand what plan fits best?</p>
+          <a href="mailto:sales@ubanihosting.co.za" class="btn btn-primary">sales@ubanihosting.co.za</a>
+        </div>
+      </div>
+      <div class="card fade-up fade-up-1">
+        <div class="card-header"><h2>Technical Support</h2></div>
+        <div class="card-body">
+          <p style="color:var(--muted);font-size:13px;margin-bottom:12px">Existing clients can raise tickets directly from the portal. General queries welcome here.</p>
+          <a href="mailto:support@ubanihosting.co.za" class="btn btn-ghost">support@ubanihosting.co.za</a>
+        </div>
+      </div>
+      <div class="card fade-up fade-up-2">
+        <div class="card-header"><h2>Partnerships</h2></div>
+        <div class="card-body">
+          <p style="color:var(--muted);font-size:13px;margin-bottom:12px">Agencies, resellers, or integration partners — let's explore how we can work together.</p>
+          <a href="mailto:partners@ubanihosting.co.za" class="btn btn-ghost">partners@ubanihosting.co.za</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card fade-up" style="max-width:480px">
+      <div class="card-header"><h2>Quick start</h2></div>
+      <div class="card-body">
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px">The fastest path is creating a free account and exploring the platform yourself.</p>
+        <a href="/portal/register" class="btn btn-primary" style="width:100%;justify-content:center">Create free account →</a>
+      </div>
+    </div>`
+  });
+}
+
+function pageLogin(apiOrigin) {
+  return authShell({
+    apiOrigin,
+    title: 'Sign in',
+    body: `
+    <div class="auth-card fade-up">
+      <div class="auth-logo"><div class="wordmark-dot"></div>Ubani Hosting</div>
+      <h1>Welcome back</h1>
+      <p>Sign in to your client portal</p>
+
+      <div class="form-group">
+        <label class="form-label">Email address</label>
+        <input id="email" type="email" class="form-input" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="password" type="password" class="form-input" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+
+      <button id="loginBtn" class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">
+        Sign in
+      </button>
+      <div id="loginAlert" class="alert"></div>
+
+      <div class="auth-footer">
+        Don't have an account? <a href="/portal/register">Create one free</a>
+      </div>
+    </div>`,
+    script: `
+    const doLogin = async () => {
+      const btn = document.getElementById('loginBtn');
+      btn.innerHTML = '<span class="spinner"></span> Signing in...';
+      btn.disabled = true;
+      clearAlert && clearAlert('loginAlert');
+      try {
+        const email    = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        if (!email || !password) throw new Error('Email and password are required');
+        const data = await api('/api/login', { method:'POST', body: JSON.stringify({ email, password }) });
+        _setToken(data.token);
+        _setUser(data.user);
+        showAlert('loginAlert', 'Success! Redirecting...', 'success');
+        setTimeout(() => window.location.replace(APP + '/portal/dashboard'), 500);
+      } catch(err) {
+        showAlert('loginAlert', err.message, 'error');
+        btn.innerHTML = 'Sign in';
+        btn.disabled = false;
+      }
+    };
+    document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    `
+  });
+}
+
+function pageRegister(apiOrigin) {
+  return authShell({
+    apiOrigin,
+    title: 'Create account',
+    body: `
+    <div class="auth-card fade-up">
+      <div class="auth-logo"><div class="wordmark-dot"></div>Ubani Hosting</div>
+      <h1>Create your account</h1>
+      <p>Start with a free plan — no credit card needed</p>
+
+      <div class="form-group">
+        <label class="form-label">Full name</label>
+        <input id="name" type="text" class="form-input" placeholder="Jane Smith" autocomplete="name"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email address</label>
+        <input id="email" type="email" class="form-input" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="password" type="password" class="form-input" placeholder="Min. 8 characters" autocomplete="new-password"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm password</label>
+        <input id="password2" type="password" class="form-input" placeholder="Repeat password" autocomplete="new-password"/>
+      </div>
+
+      <button id="regBtn" class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doRegister()">
+        Create account
+      </button>
+      <div id="regAlert" class="alert"></div>
+
+      <div class="auth-footer">
+        Already have an account? <a href="/portal/login">Sign in</a>
+      </div>
+    </div>`,
+    script: `
+    const doRegister = async () => {
+      const btn = document.getElementById('regBtn');
+      btn.innerHTML = '<span class="spinner"></span> Creating account...';
+      btn.disabled = true;
+      try {
+        const name  = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const pass  = document.getElementById('password').value;
+        const pass2 = document.getElementById('password2').value;
+        if (!email || !pass) throw new Error('Email and password are required');
+        if (pass.length < 8) throw new Error('Password must be at least 8 characters');
+        if (pass !== pass2) throw new Error('Passwords do not match');
+        const data = await api('/api/register', { method:'POST', body: JSON.stringify({ email, password: pass, name }) });
+        _setToken(data.token);
+        _setUser(data.user);
+        showAlert('regAlert', 'Account created! Redirecting...', 'success');
+        setTimeout(() => window.location.replace(APP + '/portal/dashboard'), 600);
+      } catch(err) {
+        showAlert('regAlert', err.message, 'error');
+        btn.innerHTML = 'Create account';
+        btn.disabled = false;
+      }
+    };
+    `
+  });
+}
+
+function pagePortalDashboard(apiOrigin) {
+  return portalShell({
+    apiOrigin,
+    title: 'Dashboard',
+    path: '/portal/dashboard',
+    body: `
+    <div class="stat-grid fade-up" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Projects</div><div class="stat-value" id="statProjects">—</div><div class="stat-sub">Active deployments</div></div>
+      <div class="stat-card"><div class="stat-label">Invoices</div><div class="stat-value" id="statInvoices">—</div><div class="stat-sub">All time</div></div>
+      <div class="stat-card"><div class="stat-label">Open tickets</div><div class="stat-value" id="statTickets">—</div><div class="stat-sub">Awaiting response</div></div>
+      <div class="stat-card"><div class="stat-label">Account credit</div><div class="stat-value" id="statCredit">—</div><div class="stat-sub">Available balance</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:20px">
+      <div class="card fade-up fade-up-1">
+        <div class="card-header">
+          <div><h2>Recent projects</h2><p>Your latest deployments</p></div>
+          <a href="/portal/projects" class="btn btn-ghost" style="font-size:12px">View all</a>
+        </div>
+        <div id="recentProjects"><div class="empty-state"><div class="empty-icon">◈</div><h3>No projects yet</h3><p>Deploy your first project to get started</p><a href="/portal/projects" class="btn btn-primary">Create project</a></div></div>
+      </div>
+
+      <div class="card fade-up fade-up-2">
+        <div class="card-header">
+          <div><h2>Recent invoices</h2><p>Latest billing activity</p></div>
+          <a href="/portal/billing" class="btn btn-ghost" style="font-size:12px">View all</a>
+        </div>
+        <div id="recentInvoices"><div class="empty-state"><div class="empty-icon">◎</div><h3>No invoices yet</h3><p>Invoices will appear here when created</p></div></div>
+      </div>
+    </div>`,
+    script: `
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const [me, projects, invoices, tickets] = await Promise.all([
+          api('/api/me'),
+          api('/api/projects'),
+          api('/api/invoices'),
+          api('/api/support/tickets')
+        ]);
+
+        // Stats
+        document.getElementById('statProjects').textContent = (projects.projects || []).length;
+        document.getElementById('statInvoices').textContent = (invoices.invoices || []).length;
+        const open = (tickets.tickets || []).filter(t => t.status === 'open').length;
+        document.getElementById('statTickets').textContent = open;
+        document.getElementById('statCredit').textContent = 'R' + (Number(me.user?.credit || 0) / 100).toFixed(2);
+
+        // Recent projects
+        const projs = (projects.projects || []).slice(0, 3);
+        if (projs.length) {
+          document.getElementById('recentProjects').innerHTML =
+            '<table class="data-table"><thead><tr><th>Domain</th><th>Status</th><th>Storage</th></tr></thead><tbody>' +
+            projs.map(p => '<tr><td class="mono">' + esc(p.domain) + '</td><td>' + statusBadge(p.status || 'live') + '</td><td>' + esc(Math.round((p.storage||0)/1024)) + ' KB</td></tr>').join('') +
+            '</tbody></table>';
+        }
+
+        // Recent invoices
+        const invs = (invoices.invoices || []).slice(0, 3);
+        if (invs.length) {
+          document.getElementById('recentInvoices').innerHTML =
+            '<table class="data-table"><thead><tr><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>' +
+            invs.map(i => '<tr><td>' + fmtRand(i.amount) + '</td><td>' + statusBadge(i.status) + '</td><td>' + fmtDate(i.created_at) + '</td></tr>').join('') +
+            '</tbody></table>';
+        }
+      } catch(err) {
+        console.error('Dashboard load error:', err);
+      }
+    });
+    `
+  });
+}
+
+function pagePortalProjects(apiOrigin) {
+  return portalShell({
+    apiOrigin,
+    title: 'Projects',
+    path: '/portal/projects',
+    body: `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px" class="fade-up">
+      <div>
+        <h2 style="font-size:16px;font-weight:600">Your Projects</h2>
+        <p style="color:var(--muted);font-size:13px">All active deployments linked to your account</p>
+      </div>
+      <button class="btn btn-primary" onclick="showCreateModal()">+ New Project</button>
+    </div>
+
+    <div id="projectsContainer" class="fade-up fade-up-1">
+      <div class="card"><div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading projects...</p></div></div>
+    </div>
+
+    <!-- Create modal -->
+    <div id="createModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div class="card" style="max-width:420px;width:100%;background:var(--bg2)">
+        <div class="card-header"><h2>Create New Project</h2></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Domain / Project name</label>
+            <input id="newDomain" class="form-input" placeholder="client-site.co.za"/>
+          </div>
+          <div id="createAlert" class="alert"></div>
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary" onclick="doCreate()" id="createBtn">Deploy Project</button>
+            <button class="btn btn-ghost" onclick="hideCreateModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>`,
+    script: `
+    const showCreateModal = () => {
+      document.getElementById('createModal').style.display = 'flex';
+      document.getElementById('newDomain').focus();
+    };
+    const hideCreateModal = () => {
+      document.getElementById('createModal').style.display = 'none';
+    };
+
+    const renderProjects = projects => {
+      if (!projects.length) {
+        document.getElementById('projectsContainer').innerHTML =
+          '<div class="card"><div class="empty-state"><div class="empty-icon">◈</div><h3>No projects yet</h3><p>Create your first project to start tracking client deployments.</p><button class="btn btn-primary" onclick="showCreateModal()">+ New Project</button></div></div>';
+        return;
+      }
+      document.getElementById('projectsContainer').innerHTML =
+        '<div class="card"><table class="data-table"><thead><tr><th>Domain</th><th>Status</th><th>Storage</th><th>Created</th></tr></thead><tbody>' +
+        projects.map(p => '<tr><td class="mono">' + esc(p.domain) + '</td><td>' + statusBadge(p.status || 'live') + '</td><td>' + esc(Math.round((p.storage||0)/1024)) + ' KB</td><td>' + fmtDate(p.created_at) + '</td></tr>').join('') +
+        '</tbody></table></div>';
+    };
+
+    const doCreate = async () => {
+      const btn = document.getElementById('createBtn');
+      btn.innerHTML = '<span class="spinner"></span>';
+      btn.disabled = true;
+      try {
+        const domain = document.getElementById('newDomain').value.trim() || ('project-' + Date.now() + '.co.za');
+        await api('/api/deploy', {
+          method: 'POST',
+          body: JSON.stringify({ domain, files: [{ name:'index.html', contentType:'text/html', content:'<h1>' + domain + '</h1>' }] })
+        });
+        hideCreateModal();
+        loadProjects();
+      } catch(err) {
+        showAlert('createAlert', err.message, 'error');
+      } finally {
+        btn.innerHTML = 'Deploy Project';
+        btn.disabled = false;
+      }
+    };
+
+    const loadProjects = async () => {
+      try {
+        const data = await api('/api/projects');
+        renderProjects(data.projects || []);
+      } catch(err) {
+        document.getElementById('projectsContainer').innerHTML = '<div class="card"><div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div></div>';
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', loadProjects);
+    `
+  });
+}
+
+function pagePortalBilling(apiOrigin) {
+  return portalShell({
+    apiOrigin,
+    title: 'Billing',
+    path: '/portal/billing',
+    body: `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+      <div class="card fade-up">
+        <div class="card-header"><h2>Create Invoice</h2><p>Initiate a Yoco payment session</p></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Amount (ZAR)</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="color:var(--muted);font-size:18px;font-weight:600">R</span>
+              <input id="amountRand" class="form-input" type="number" min="1" step="0.01" placeholder="99.00" style="font-size:18px;font-weight:600"/>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="doCheckout()" id="checkoutBtn" style="width:100%;justify-content:center;padding:10px">
+            Pay with Yoco →
+          </button>
+          <div id="checkoutAlert" class="alert" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <div class="card fade-up fade-up-1">
+        <div class="card-header"><h2>Invoice History</h2><p>All payment records</p></div>
+        <div id="invoiceList">
+          <div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading...</p></div>
+        </div>
+      </div>
+    </div>`,
+    script: `
+    const doCheckout = async () => {
+      const btn = document.getElementById('checkoutBtn');
+      btn.innerHTML = '<span class="spinner"></span> Creating checkout...';
+      btn.disabled = true;
+      try {
+        const rand = parseFloat(document.getElementById('amountRand').value);
+        if (!rand || rand <= 0) throw new Error('Enter a valid amount');
+        const cents = Math.round(rand * 100);
+        const data = await api('/api/invoice/checkout', { method:'POST', body: JSON.stringify({ amount: cents }) });
+        if (data.checkoutUrl) {
+          window.open(data.checkoutUrl, '_blank', 'noopener,noreferrer');
+          showAlert('checkoutAlert', 'Checkout opened in a new tab. Invoice ID: ' + data.invoiceId, 'success');
+        } else {
+          showAlert('checkoutAlert', 'Invoice created but no checkout URL returned. Invoice: ' + data.invoiceId, 'warn');
+        }
+        loadInvoices();
+      } catch(err) {
+        showAlert('checkoutAlert', err.message, 'error');
+      } finally {
+        btn.innerHTML = 'Pay with Yoco →';
+        btn.disabled = false;
+      }
+    };
+
+    const loadInvoices = async () => {
+      try {
+        const data = await api('/api/invoices');
+        const invs = data.invoices || [];
+        if (!invs.length) {
+          document.getElementById('invoiceList').innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div><h3>No invoices yet</h3><p>Create your first invoice above</p></div>';
+          return;
+        }
+        document.getElementById('invoiceList').innerHTML =
+          '<table class="data-table"><thead><tr><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>' +
+          invs.map(i => '<tr><td style="font-weight:600">' + fmtRand(i.amount) + '</td><td>' + statusBadge(i.status) + '</td><td>' + fmtDate(i.created_at) + '</td></tr>').join('') +
+          '</tbody></table>';
+      } catch(err) {
+        document.getElementById('invoiceList').innerHTML = '<div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', loadInvoices);
+    `
+  });
+}
+
+function pagePortalSupport(apiOrigin) {
+  return portalShell({
+    apiOrigin,
+    title: 'Support',
+    path: '/portal/support',
+    body: `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+      <div class="card fade-up">
+        <div class="card-header"><h2>New Ticket</h2><p>Our team typically responds within 24 hours</p></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Subject</label>
+            <input id="ticketSubject" class="form-input" placeholder="Brief description of your issue"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea id="ticketMessage" class="form-input" placeholder="Describe your issue in detail..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="submitTicket()" id="ticketBtn" style="width:100%;justify-content:center;padding:10px">
+            Submit Ticket
+          </button>
+          <div id="ticketAlert" class="alert" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <div class="card fade-up fade-up-1">
+        <div class="card-header"><h2>My Tickets</h2><p>Track your open &amp; closed requests</p></div>
+        <div id="ticketList">
+          <div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading...</p></div>
+        </div>
+      </div>
+    </div>`,
+    script: `
+    const submitTicket = async () => {
+      const btn = document.getElementById('ticketBtn');
+      btn.innerHTML = '<span class="spinner"></span> Submitting...';
+      btn.disabled = true;
+      try {
+        const subject = document.getElementById('ticketSubject').value.trim();
+        const message = document.getElementById('ticketMessage').value.trim();
+        if (!subject) throw new Error('Subject is required');
+        await api('/api/support/tickets', { method:'POST', body: JSON.stringify({ subject, message }) });
+        document.getElementById('ticketSubject').value = '';
+        document.getElementById('ticketMessage').value = '';
+        showAlert('ticketAlert', 'Ticket submitted! We will respond shortly.', 'success');
+        loadTickets();
+      } catch(err) {
+        showAlert('ticketAlert', err.message, 'error');
+      } finally {
+        btn.innerHTML = 'Submit Ticket';
+        btn.disabled = false;
+      }
+    };
+
+    const loadTickets = async () => {
+      try {
+        const data = await api('/api/support/tickets');
+        const tickets = data.tickets || [];
+        if (!tickets.length) {
+          document.getElementById('ticketList').innerHTML = '<div class="empty-state"><div class="empty-icon">◷</div><h3>No tickets yet</h3><p>Submit a ticket if you need help</p></div>';
+          return;
+        }
+        document.getElementById('ticketList').innerHTML =
+          '<table class="data-table"><thead><tr><th>Subject</th><th>Status</th><th>Date</th></tr></thead><tbody>' +
+          tickets.map(t => '<tr><td>' + esc(t.subject) + '</td><td>' + statusBadge(t.status) + '</td><td>' + fmtDate(t.created_at) + '</td></tr>').join('') +
+          '</tbody></table>';
+      } catch(err) {
+        document.getElementById('ticketList').innerHTML = '<div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', loadTickets);
+    `
+  });
+}
+
+function pageAdminDashboard(apiOrigin) {
+  return adminShell({
+    apiOrigin,
+    title: 'Overview',
+    body: `
+    <div class="stat-grid fade-up" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Total users</div><div class="stat-value" id="sUsers">—</div></div>
+      <div class="stat-card"><div class="stat-label">Projects</div><div class="stat-value" id="sProjects">—</div></div>
+      <div class="stat-card"><div class="stat-label">Invoices</div><div class="stat-value" id="sInvoices">—</div></div>
+      <div class="stat-card"><div class="stat-label">Paid revenue</div><div class="stat-value" id="sRevenue">—</div></div>
+    </div>
+    <div id="adminAlert" class="alert fade-up" style="margin-top:16px;max-width:500px"></div>`,
+    script: `
+    const load = async () => {
+      try {
+        const data = await adminApi('/api/admin/summary');
+        document.getElementById('sUsers').textContent    = data.users;
+        document.getElementById('sProjects').textContent = data.projects;
+        document.getElementById('sInvoices').textContent = data.invoices;
+        document.getElementById('sRevenue').textContent  = fmtRand(data.paidRevenueCents);
+      } catch(err) {
+        document.getElementById('adminAlert').className   = 'alert alert-error fade-up';
+        document.getElementById('adminAlert').textContent = err.message;
+      }
+    };
+    document.getElementById('autoLoadTrigger') || (window._autoLoad = load);
+    window.addEventListener('DOMContentLoaded', () => { if (_adminKey()) load(); });
+    document.getElementById('adminKeyInput')?.addEventListener('change', load);
+    `
+  });
+}
+
+function pageAdminUsers(apiOrigin) {
+  return adminShell({
+    apiOrigin,
+    title: 'Users',
+    body: `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px" class="fade-up">
+      <div><h2 style="font-size:16px;font-weight:600">All Users</h2><p style="color:var(--muted);font-size:13px">Registered accounts</p></div>
+      <button class="btn btn-ghost" onclick="loadUsers()">↺ Refresh</button>
+    </div>
+    <div class="card fade-up" id="usersContainer">
+      <div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading...</p></div>
+    </div>`,
+    script: `
+    const loadUsers = async () => {
+      try {
+        const data = await adminApi('/api/admin/users');
+        const users = data.users || [];
+        if (!users.length) {
+          document.getElementById('usersContainer').innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div><h3>No users yet</h3></div>';
+          return;
+        }
+        document.getElementById('usersContainer').innerHTML =
+          '<table class="data-table"><thead><tr><th>Email</th><th>Credit</th><th>Registered</th><th>ID</th></tr></thead><tbody>' +
+          users.map(u => '<tr><td>' + esc(u.email) + '</td><td>R' + (Number(u.credit||0)/100).toFixed(2) + '</td><td>' + fmtDate(u.created_at) + '</td><td class="mono" style="color:var(--muted)">' + esc(u.id.slice(0,8)) + '…</td></tr>').join('') +
+          '</tbody></table>';
+      } catch(err) {
+        document.getElementById('usersContainer').innerHTML = '<div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
+      }
+    };
+    window.addEventListener('DOMContentLoaded', () => { if (_adminKey()) loadUsers(); });
+    document.getElementById('adminKeyInput')?.addEventListener('change', loadUsers);
+    `
+  });
+}
+
+function pageAdminRevenue(apiOrigin) {
+  return adminShell({
+    apiOrigin,
+    title: 'Revenue',
+    body: `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px" class="fade-up">
+      <div><h2 style="font-size:16px;font-weight:600">Revenue Analytics</h2><p style="color:var(--muted);font-size:13px">Invoice totals by status</p></div>
+      <button class="btn btn-ghost" onclick="loadRevenue()">↺ Refresh</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+      <div class="card fade-up" id="totalsCard">
+        <div class="card-header"><h2>By Status</h2></div>
+        <div class="empty-state"><div class="spinner"></div></div>
+      </div>
+      <div class="card fade-up fade-up-1" id="paidCard">
+        <div class="card-header"><h2>Latest Paid</h2></div>
+        <div class="empty-state"><div class="spinner"></div></div>
+      </div>
+    </div>`,
+    script: `
+    const loadRevenue = async () => {
+      try {
+        const data = await adminApi('/api/admin/revenue');
+        const totals = data.totals || [];
+        const paid   = data.latestPaid || [];
+
+        document.getElementById('totalsCard').innerHTML =
+          '<div class="card-header"><h2>By Status</h2></div>' +
+          (totals.length
+            ? '<table class="data-table"><thead><tr><th>Status</th><th>Count</th><th>Total</th></tr></thead><tbody>' +
+              totals.map(t => '<tr><td>' + statusBadge(t.status) + '</td><td>' + esc(t.count) + '</td><td style="font-weight:600">' + fmtRand(t.cents) + '</td></tr>').join('') +
+              '</tbody></table>'
+            : '<div class="empty-state"><p>No data</p></div>');
+
+        document.getElementById('paidCard').innerHTML =
+          '<div class="card-header"><h2>Latest Paid</h2></div>' +
+          (paid.length
+            ? '<table class="data-table"><thead><tr><th>Amount</th><th>User</th><th>Date</th></tr></thead><tbody>' +
+              paid.map(i => '<tr><td style="font-weight:600">' + fmtRand(i.amount) + '</td><td class="mono" style="color:var(--muted)">' + esc(i.user_id.slice(0,8)) + '…</td><td>' + fmtDate(i.created_at) + '</td></tr>').join('') +
+              '</tbody></table>'
+            : '<div class="empty-state"><p>No paid invoices yet</p></div>');
+      } catch(err) {
+        document.getElementById('totalsCard').innerHTML = '<div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
+      }
+    };
+    window.addEventListener('DOMContentLoaded', () => { if (_adminKey()) loadRevenue(); });
+    document.getElementById('adminKeyInput')?.addEventListener('change', loadRevenue);
+    `
+  });
+}
+
+function pageAdminTickets(apiOrigin) {
+  return adminShell({
+    apiOrigin,
+    title: 'Tickets',
+    body: `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px" class="fade-up">
+      <div><h2 style="font-size:16px;font-weight:600">Support Tickets</h2><p style="color:var(--muted);font-size:13px">All client requests</p></div>
+      <button class="btn btn-ghost" onclick="loadTickets()">↺ Refresh</button>
+    </div>
+    <div class="card fade-up" id="ticketsContainer">
+      <div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading...</p></div>
+    </div>`,
+    script: `
+    const loadTickets = async () => {
+      try {
+        const data = await adminApi('/api/admin/tickets');
+        const tickets = data.tickets || [];
+        if (!tickets.length) {
+          document.getElementById('ticketsContainer').innerHTML = '<div class="empty-state"><div class="empty-icon">◷</div><h3>No tickets yet</h3><p>Client support tickets will appear here</p></div>';
+          return;
+        }
+        document.getElementById('ticketsContainer').innerHTML =
+          '<table class="data-table"><thead><tr><th>Subject</th><th>Status</th><th>User</th><th>Date</th></tr></thead><tbody>' +
+          tickets.map(t => '<tr><td><strong>' + esc(t.subject) + '</strong></td><td>' + statusBadge(t.status) + '</td><td class="mono" style="color:var(--muted)">' + esc((t.user_id||'').slice(0,8)) + '…</td><td>' + fmtDate(t.created_at) + '</td></tr>').join('') +
+          '</tbody></table>';
+      } catch(err) {
+        document.getElementById('ticketsContainer').innerHTML = '<div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
+      }
+    };
+    window.addEventListener('DOMContentLoaded', () => { if (_adminKey()) loadTickets(); });
+    document.getElementById('adminKeyInput')?.addEventListener('change', loadTickets);
+    `
+  });
+}
+
+// ════════════════════════════════════════════════
+//  MAIN ROUTER
+// ════════════════════════════════════════════════
+
+export function renderFrontend(pathname, apiOrigin) {
+  switch (pathname) {
+    case '/':              return pageHome(apiOrigin);
+    case '/pricing':       return pagePricing(apiOrigin);
+    case '/hosting':       return pageHosting(apiOrigin);
+    case '/contact':       return pageContact(apiOrigin);
+    case '/portal/login':  return pageLogin(apiOrigin);
+    case '/portal/register': return pageRegister(apiOrigin);
+    case '/portal':
+    case '/portal/dashboard': return pagePortalDashboard(apiOrigin);
+    case '/portal/projects':  return pagePortalProjects(apiOrigin);
+    case '/portal/billing':   return pagePortalBilling(apiOrigin);
+    case '/portal/support':   return pagePortalSupport(apiOrigin);
+    case '/admin/dashboard':  return pageAdminDashboard(apiOrigin);
+    case '/admin/users':      return pageAdminUsers(apiOrigin);
+    case '/admin/revenue':    return pageAdminRevenue(apiOrigin);
+    case '/admin/tickets':    return pageAdminTickets(apiOrigin);
+    default: return null;
+  }
+}
+
+// Keep backward compat export
+export function renderDesignerLanding(apiOrigin) {
+  return pageHome(apiOrigin);
 }
