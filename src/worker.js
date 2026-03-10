@@ -1370,7 +1370,6 @@ export default {
         if (adminError) return adminError;
         return await adminTickets(env);
       }
-      }
       if (request.method === "GET" && /^\/api\/admin\/tickets\/[^/]+$/.test(url.pathname)) {
         const adminError = requireAdmin(request, env);
         if (adminError) return adminError;
