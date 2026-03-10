@@ -278,49 +278,7 @@ async function login(request, env) {
   return json({ user: { id: user.id, email: user.email, name: user.name, plan: user.plan, credit: user.credit }, token });
 }
 
-async function deploy(request, env, userId) {
-  const body = await parseJson(request);
-  const domain = body?.domain;
-  const files = Array.isArray(body?.files) ? body.files : [];
 
-  if (typeof domain !== "string" || !domain || files.length === 0) {
-    return json({ error: "domain and at least one file are required" }, { status: 400 });
-  }
-
-  const db = getTursoClient(env);
-  const projectId = crypto.randomUUID();
-
-  await db.execute({
-    sql: `INSERT INTO projects(id, user_id, domain, storage)
-          VALUES (?, ?, ?, 0)`,
-    args: [projectId, userId, domain]
-  });
-
-  let totalBytes = 0;
-  for (const file of files) {
-    const path = file?.name || file?.path;
-    const content = typeof file?.content === "string" ? file.content : "";
-    const contentType = file?.contentType || "text/plain";
-
-    if (!path || typeof path !== "string") continue;
-
-    const size = new TextEncoder().encode(content).byteLength;
-    totalBytes += size;
-
-    await db.execute({
-      sql: `INSERT INTO site_files(id, project_id, user_id, path, content, content_type, size, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-      args: [crypto.randomUUID(), projectId, userId, path, content, contentType, size]
-    });
-  }
-
-  await db.execute({
-    sql: "UPDATE projects SET storage = ? WHERE id = ?",
-    args: [totalBytes, projectId]
-  });
-
-  return json({ status: "live", projectId, bytesStored: totalBytes });
-}
 
 async function invoice(request, env, userId) {
   const body = await parseJson(request);
@@ -449,7 +407,7 @@ async function me(env, userId) {
 async function listProjects(env, userId) {
   const db = getTursoClient(env);
   const result = await db.execute({
-    sql: `SELECT id, domain, storage, created_at
+    sql: `SELECT id, domain, status, description, storage, cf_pages_url, cf_deployment_id, created_at
           FROM projects
           WHERE user_id = ?
           ORDER BY created_at DESC
@@ -458,6 +416,323 @@ async function listProjects(env, userId) {
   });
   return json({ projects: result.rows });
 }
+
+async function getProject(request, env, userId) {
+  const projectId = new URL(request.url).pathname.split("/")[3];
+  const db = getTursoClient(env);
+  const [projResult, filesResult, deploysResult] = await Promise.all([
+    db.execute({
+      sql: `SELECT id, domain, status, description, storage, cf_pages_url, cf_pages_project, cf_deployment_id, created_at
+            FROM projects WHERE id = ? AND user_id = ? LIMIT 1`,
+      args: [projectId, userId]
+    }),
+    db.execute({
+      sql: `SELECT id, filename, content_type, size_bytes, r2_key, uploaded_at
+            FROM r2_files WHERE project_id = ? ORDER BY uploaded_at DESC LIMIT 50`,
+      args: [projectId]
+    }),
+    db.execute({
+      sql: `SELECT id, status, pages_url, triggered_at, completed_at, error_message
+            FROM deployments WHERE project_id = ? ORDER BY triggered_at DESC LIMIT 10`,
+      args: [projectId]
+    })
+  ]);
+  if (!projResult.rows.length) return json({ error: "Project not found" }, { status: 404 });
+  return json({
+    project: projResult.rows[0],
+    files: filesResult.rows,
+    deployments: deploysResult.rows
+  });
+}
+
+async function updateProject(request, env, userId) {
+  const projectId = new URL(request.url).pathname.split("/")[3];
+  const body = await parseJson(request);
+  const db = getTursoClient(env);
+
+  // Verify ownership
+  const check = await db.execute({
+    sql: "SELECT id FROM projects WHERE id = ? AND user_id = ? LIMIT 1",
+    args: [projectId, userId]
+  });
+  if (!check.rows.length) return json({ error: "Project not found" }, { status: 404 });
+
+  const updates = [];
+  const args = [];
+  if (typeof body?.description === "string") { updates.push("description = ?"); args.push(body.description.slice(0, 500)); }
+  if (typeof body?.domain === "string" && body.domain.trim()) { updates.push("domain = ?"); args.push(body.domain.trim()); }
+  const allowedStatuses = ["draft", "live", "paused"];
+  if (body?.status && allowedStatuses.includes(body.status)) { updates.push("status = ?"); args.push(body.status); }
+
+  if (!updates.length) return json({ error: "No valid fields to update" }, { status: 400 });
+  args.push(projectId);
+
+  await db.execute({ sql: `UPDATE projects SET ${updates.join(", ")} WHERE id = ?`, args });
+  return json({ ok: true });
+}
+
+// ── Phase 3: Project create (new) ─────────────────────────────
+async function createProject(request, env, userId) {
+  const body = await parseJson(request);
+  const domain = String(body?.domain || "").trim();
+  if (!domain) return json({ error: "domain is required" }, { status: 400 });
+  const db = getTursoClient(env);
+  const projectId = crypto.randomUUID();
+  await db.execute({
+    sql: `INSERT INTO projects(id, user_id, domain, status, description, storage)
+          VALUES (?, ?, ?, 'draft', ?, 0)`,
+    args: [projectId, userId, domain, String(body?.description || "")]
+  });
+  return json({ project: { id: projectId, domain, status: "draft" } }, { status: 201 });
+}
+
+// ── R2 File Upload ────────────────────────────────────────────
+async function uploadFile(request, env, userId) {
+  const projectId = new URL(request.url).pathname.split("/")[3];
+  const db = getTursoClient(env);
+  const projCheck = await db.execute({
+    sql: "SELECT id FROM projects WHERE id = ? AND user_id = ? LIMIT 1",
+    args: [projectId, userId]
+  });
+  if (!projCheck.rows.length) return json({ error: "Project not found" }, { status: 404 });
+
+  if (!env.FILES_BUCKET) {
+    return json({ error: "R2 bucket not configured — add FILES_BUCKET binding to wrangler.toml" }, { status: 503 });
+  }
+
+  const contentType  = request.headers.get("content-type") || "application/octet-stream";
+  const filename     = decodeURIComponent(request.headers.get("x-filename") || `file-${Date.now()}`);
+  const safeFilename = filename.replace(/[^a-zA-Z0-9._\-]/g, "_").slice(0, 200);
+  const r2Key        = `projects/${projectId}/${safeFilename}`;
+
+  const bodyBytes = await request.arrayBuffer();
+  if (!bodyBytes.byteLength) return json({ error: "Empty file body" }, { status: 400 });
+  if (bodyBytes.byteLength > 25 * 1024 * 1024) return json({ error: "File too large (25MB max)" }, { status: 413 });
+
+  await env.FILES_BUCKET.put(r2Key, bodyBytes, {
+    httpMetadata: { contentType },
+    customMetadata: { projectId, userId, originalFilename: filename }
+  });
+
+  const fileId = crypto.randomUUID();
+  await db.execute({
+    sql: `INSERT OR REPLACE INTO r2_files(id, project_id, user_id, r2_key, filename, content_type, size_bytes, uploaded_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    args: [fileId, projectId, userId, r2Key, safeFilename, contentType, bodyBytes.byteLength]
+  });
+
+  await db.execute({
+    sql: `UPDATE projects
+          SET storage = (SELECT COALESCE(SUM(size_bytes),0) FROM r2_files WHERE project_id = ?)
+          WHERE id = ?`,
+    args: [projectId, projectId]
+  });
+
+  return json({ ok: true, fileId, r2Key, filename: safeFilename, size: bodyBytes.byteLength }, { status: 201 });
+}
+
+async function deleteFile(request, env, userId) {
+  const parts     = new URL(request.url).pathname.split("/");
+  const projectId = parts[3];
+  const fileId    = parts[5];
+  const db = getTursoClient(env);
+  const fileResult = await db.execute({
+    sql: "SELECT r2_key FROM r2_files WHERE id = ? AND project_id = ? AND user_id = ? LIMIT 1",
+    args: [fileId, projectId, userId]
+  });
+  if (!fileResult.rows.length) return json({ error: "File not found" }, { status: 404 });
+  const r2Key = String(fileResult.rows[0].r2_key);
+  if (env.FILES_BUCKET) await env.FILES_BUCKET.delete(r2Key);
+  await db.execute({ sql: "DELETE FROM r2_files WHERE id = ?", args: [fileId] });
+  await db.execute({
+    sql: `UPDATE projects SET storage = (SELECT COALESCE(SUM(size_bytes),0) FROM r2_files WHERE project_id = ?) WHERE id = ?`,
+    args: [projectId, projectId]
+  });
+  return json({ ok: true });
+}
+
+async function serveProjectFile(request, env) {
+  const parts     = new URL(request.url).pathname.split("/").filter(Boolean);
+  const projectId = parts[1];
+  const filePath  = parts.slice(2).join("/");
+  const r2Key     = `projects/${projectId}/${filePath}`;
+  if (!env.FILES_BUCKET) return new Response("File storage unavailable", { status: 503 });
+  const obj = await env.FILES_BUCKET.get(r2Key);
+  if (!obj) return new Response("Not Found", { status: 404 });
+  const headers = new Headers();
+  headers.set("content-type", obj.httpMetadata?.contentType || "application/octet-stream");
+  headers.set("cache-control", "public, max-age=3600");
+  return new Response(obj.body, { headers });
+}
+
+// ── Cloudflare Pages Deployment ───────────────────────────────
+async function deployToPages(request, env, userId) {
+  const projectId = new URL(request.url).pathname.split("/")[3];
+  const db = getTursoClient(env);
+
+  const projResult = await db.execute({
+    sql: "SELECT id, domain, cf_pages_project FROM projects WHERE id = ? AND user_id = ? LIMIT 1",
+    args: [projectId, userId]
+  });
+  if (!projResult.rows.length) return json({ error: "Project not found" }, { status: 404 });
+  const project = projResult.rows[0];
+
+  // Immediately mark as building
+  await db.execute({ sql: "UPDATE projects SET status = 'building' WHERE id = ?", args: [projectId] });
+
+  const cfAccountId = env.CF_ACCOUNT_ID;
+  const cfApiToken  = env.CF_API_TOKEN;
+
+  if (!cfAccountId || !cfApiToken) {
+    await db.execute({ sql: "UPDATE projects SET status = 'live' WHERE id = ?", args: [projectId] });
+    const deployId = crypto.randomUUID();
+    await db.execute({
+      sql: `INSERT INTO deployments(id, project_id, user_id, status, triggered_at, completed_at)
+            VALUES (?, ?, ?, 'live', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      args: [deployId, projectId, userId]
+    });
+    return json({
+      ok: true, deployId, status: "live",
+      note: "CF_ACCOUNT_ID / CF_API_TOKEN not set. Project marked live without real Pages deployment. Add credentials to wrangler secrets to enable full deployment."
+    });
+  }
+
+  const filesResult = await db.execute({
+    sql: "SELECT r2_key, filename, content_type FROM r2_files WHERE project_id = ? LIMIT 100",
+    args: [projectId]
+  });
+
+  const domain           = String(project.domain || "project").replace(/[^a-z0-9]/gi, "-").toLowerCase().slice(0, 55);
+  const pagesProjectName = String(project.cf_pages_project || `ubani-${domain}-${projectId.slice(0, 8)}`);
+
+  // Ensure Pages project exists
+  const checkRes = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/pages/projects/${pagesProjectName}`,
+    { headers: { authorization: `Bearer ${cfApiToken}` } }
+  );
+  if (!checkRes.ok) {
+    const createRes = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/pages/projects`,
+      {
+        method: "POST",
+        headers: { authorization: `Bearer ${cfApiToken}`, "content-type": "application/json" },
+        body: JSON.stringify({ name: pagesProjectName, production_branch: "main" })
+      }
+    );
+    if (!createRes.ok) {
+      const errData = await createRes.json().catch(() => ({}));
+      const msg = errData?.errors?.[0]?.message || `CF Pages create failed (${createRes.status})`;
+      await db.execute({ sql: "UPDATE projects SET status = 'draft' WHERE id = ?", args: [projectId] });
+      return json({ error: msg }, { status: 502 });
+    }
+  }
+
+  // Build multipart upload
+  const formData = new FormData();
+  let fileCount = 0;
+
+  for (const file of filesResult.rows) {
+    try {
+      const obj = await env.FILES_BUCKET.get(String(file.r2_key));
+      if (obj) {
+        const bytes = await obj.arrayBuffer();
+        formData.append("file", new Blob([bytes], { type: String(file.content_type) }), String(file.filename));
+        fileCount++;
+      }
+    } catch { /* skip */ }
+  }
+
+  if (fileCount === 0) {
+    const html = `<!doctype html><html><head><meta charset="utf-8"/><title>${domain}</title><style>body{font-family:system-ui;background:#0a0c10;color:#e6edf3;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}h1{font-size:2rem}</style></head><body><h1>${domain}</h1><p>Deployed via Ubani Hosting.</p></body></html>`;
+    formData.append("file", new Blob([html], { type: "text/html" }), "index.html");
+  }
+
+  const deployRes = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/pages/projects/${pagesProjectName}/deployments`,
+    { method: "POST", headers: { authorization: `Bearer ${cfApiToken}` }, body: formData }
+  );
+
+  const deployData = await deployRes.json().catch(() => ({}));
+
+  if (!deployRes.ok) {
+    const msg = deployData?.errors?.[0]?.message || `Deployment failed (${deployRes.status})`;
+    await db.execute({ sql: "UPDATE projects SET status = 'draft' WHERE id = ?", args: [projectId] });
+    const deployId = crypto.randomUUID();
+    await db.execute({
+      sql: `INSERT INTO deployments(id, project_id, user_id, status, error_message, triggered_at, completed_at)
+            VALUES (?, ?, ?, 'failed', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      args: [deployId, projectId, userId, msg]
+    });
+    return json({ error: msg }, { status: 502 });
+  }
+
+  const cfDeployId = String(deployData?.result?.id || "");
+  const pagesUrl   = String(deployData?.result?.url || `https://${pagesProjectName}.pages.dev`);
+
+  await db.execute({
+    sql: "UPDATE projects SET status = 'live', cf_pages_project = ?, cf_pages_url = ?, cf_deployment_id = ? WHERE id = ?",
+    args: [pagesProjectName, pagesUrl, cfDeployId, projectId]
+  });
+
+  const deployId = crypto.randomUUID();
+  await db.execute({
+    sql: `INSERT INTO deployments(id, project_id, user_id, status, cf_deploy_id, pages_url, triggered_at, completed_at)
+          VALUES (?, ?, ?, 'live', ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    args: [deployId, projectId, userId, cfDeployId, pagesUrl]
+  });
+
+  return json({ ok: true, deployId, status: "live", pagesUrl, cfDeployId });
+}
+
+async function listDeployments(request, env, userId) {
+  const projectId = new URL(request.url).pathname.split("/")[3];
+  const db = getTursoClient(env);
+  const result = await db.execute({
+    sql: `SELECT id, status, pages_url, triggered_at, completed_at, error_message
+          FROM deployments WHERE project_id = ? AND user_id = ?
+          ORDER BY triggered_at DESC LIMIT 20`,
+    args: [projectId, userId]
+  });
+  return json({ deployments: result.rows });
+}
+
+// ── Admin: all projects ────────────────────────────────────────
+async function adminProjects(env) {
+  const db = getTursoClient(env);
+  const result = await db.execute({
+    sql: `SELECT p.id, p.domain, p.status, p.cf_pages_url, p.storage, p.created_at, u.email, u.name
+          FROM projects p JOIN users u ON u.id = p.user_id
+          ORDER BY p.created_at DESC LIMIT 200`
+  });
+  return json({ projects: result.rows });
+}
+
+async function adminUpdateProjectStatus(request, env) {
+  const projectId = new URL(request.url).pathname.split("/")[5];
+  const body = await parseJson(request);
+  const allowed = ["draft", "live", "paused", "building"];
+  if (!body?.status || !allowed.includes(body.status)) {
+    return json({ error: `status must be one of: ${allowed.join(", ")}` }, { status: 400 });
+  }
+  const db = getTursoClient(env);
+  await db.execute({ sql: "UPDATE projects SET status = ? WHERE id = ?", args: [body.status, projectId] });
+  return json({ ok: true });
+}
+
+// ── Legacy deploy (kept for backward compat) ──────────────────
+async function deploy(request, env, userId) {
+  const body   = await parseJson(request);
+  const domain = String(body?.domain || "").trim();
+  if (!domain) return json({ error: "domain is required" }, { status: 400 });
+  const db = getTursoClient(env);
+  const projectId = crypto.randomUUID();
+  await db.execute({
+    sql: "INSERT INTO projects(id, user_id, domain, status, storage) VALUES (?, ?, ?, 'draft', 0)",
+    args: [projectId, userId, domain]
+  });
+  return json({ status: "draft", projectId }, { status: 201 });
+}
+
 
 async function listInvoices(env, userId) {
   const db = getTursoClient(env);
@@ -1015,12 +1290,39 @@ export default {
         return await adminCloseTicket(request, env);
       }
 
+      // ── Admin: projects
+      if (request.method === "GET" && url.pathname === "/api/admin/projects") {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        return await adminProjects(env);
+      }
+      if (request.method === "POST" && /^\/api\/admin\/projects\/[^/]+\/status$/.test(url.pathname)) {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        return await adminUpdateProjectStatus(request, env);
+      }
+
       const authUserId = await getAuthUserId(request, env);
       if (!authUserId) {
         return json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      if (request.method === "POST" && url.pathname === "/api/deploy") return await deploy(request, env, authUserId);
+      // ── Public file serving (R2)
+      if (request.method === "GET" && url.pathname.startsWith("/files/")) {
+        return await serveProjectFile(request, env);
+      }
+
+      // ── Project CRUD + deployment
+      if (request.method === "POST" && url.pathname === "/api/projects") return await createProject(request, env, authUserId);
+      if (request.method === "GET"  && url.pathname === "/api/projects") return await listProjects(env, authUserId);
+      if (request.method === "GET"  && /^\/api\/projects\/[^/]+$/.test(url.pathname)) return await getProject(request, env, authUserId);
+      if (request.method === "PATCH"  && /^\/api\/projects\/[^/]+$/.test(url.pathname)) return await updateProject(request, env, authUserId);
+      if (request.method === "POST" && /^\/api\/projects\/[^/]+\/files$/.test(url.pathname)) return await uploadFile(request, env, authUserId);
+      if (request.method === "DELETE" && /^\/api\/projects\/[^/]+\/files\/[^/]+$/.test(url.pathname)) return await deleteFile(request, env, authUserId);
+      if (request.method === "POST" && /^\/api\/projects\/[^/]+\/deploy$/.test(url.pathname)) return await deployToPages(request, env, authUserId);
+      if (request.method === "GET"  && /^\/api\/projects\/[^/]+\/deployments$/.test(url.pathname)) return await listDeployments(request, env, authUserId);
+
+      if (request.method === "POST" && url.pathname === "/api/deploy") return await deploy(request, env, authUserId); // legacy
       if (request.method === "POST" && url.pathname === "/api/invoice") return await invoice(request, env, authUserId);
       if (request.method === "POST" && url.pathname === "/api/invoice/checkout") return await createInvoiceCheckout(request, env, authUserId);
 
@@ -1034,7 +1336,6 @@ export default {
       if (request.method === "GET"   && url.pathname === "/api/me") return await me(env, authUserId);
       if (request.method === "PATCH" && url.pathname === "/api/me") return await updateProfile(request, env, authUserId);
 
-      if (request.method === "GET" && url.pathname === "/api/projects") return await listProjects(env, authUserId);
       if (request.method === "GET" && url.pathname === "/api/invoices") return await listInvoices(env, authUserId);
 
       return json({ message: "Ubani API" });

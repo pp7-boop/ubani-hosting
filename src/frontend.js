@@ -707,7 +707,8 @@ function adminShell({ title, body, script = '', apiOrigin = '' }) {
   const navItems = [
     { href: '/admin/dashboard', icon: '⊞', label: 'Overview'  },
     { href: '/admin/users',     icon: '◎', label: 'Users'     },
-    { href: '/admin/revenue',   icon: '◈', label: 'Revenue'   },
+    { href: '/admin/projects',  icon: '◈', label: 'Projects'  },
+    { href: '/admin/revenue',   icon: '◉', label: 'Revenue'   },
     { href: '/admin/tickets',   icon: '◷', label: 'Tickets'   },
   ];
 
@@ -1231,82 +1232,202 @@ function pagePortalProjects(apiOrigin) {
     title: 'Projects',
     path: '/portal/projects',
     body: `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px" class="fade-up">
-      <div>
-        <h2 style="font-size:16px;font-weight:600">Your Projects</h2>
-        <p style="color:var(--muted);font-size:13px">All active deployments linked to your account</p>
+    <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;min-height:500px">
+
+      <!-- Left: project list -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <button class="btn btn-primary" onclick="showNewProject()" style="width:100%;justify-content:center">+ New Project</button>
+        <div class="card" style="flex:1">
+          <div class="card-header"><h2>Your Projects</h2><p id="projCount">Loading...</p></div>
+          <div id="projectListPanel" style="overflow-y:auto;max-height:520px">
+            <div class="empty-state"><div class="spinner"></div></div>
+          </div>
+        </div>
       </div>
-      <button class="btn btn-primary" onclick="showCreateModal()">+ New Project</button>
-    </div>
 
-    <div id="projectsContainer" class="fade-up fade-up-1">
-      <div class="card"><div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading projects...</p></div></div>
-    </div>
+      <!-- Right: project detail -->
+      <div id="projectDetailPanel" class="card">
+        <div class="empty-state" style="padding:60px 24px">
+          <div class="empty-icon">◈</div>
+          <h3>Select a project</h3>
+          <p>Choose a project from the left or create a new one to get started.</p>
+        </div>
+      </div>
 
-    <!-- Create modal -->
-    <div id="createModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px">
-      <div class="card" style="max-width:420px;width:100%;background:var(--bg2)">
-        <div class="card-header"><h2>Create New Project</h2></div>
+    </div>`,
+    script: `
+    let activeProjectId = null;
+
+    const showNewProject = () => {
+      activeProjectId = null;
+      document.querySelectorAll('.proj-item').forEach(el => el.style.background = '');
+      document.getElementById('projectDetailPanel').innerHTML = \`
+        <div class="card-header"><h2>New Project</h2><p>Create a new client deployment</p></div>
         <div class="card-body">
           <div class="form-group">
             <label class="form-label">Domain / Project name</label>
             <input id="newDomain" class="form-input" placeholder="client-site.co.za"/>
           </div>
-          <div id="createAlert" class="alert"></div>
-          <div style="display:flex;gap:8px;margin-top:16px">
-            <button class="btn btn-primary" onclick="doCreate()" id="createBtn">Deploy Project</button>
-            <button class="btn btn-ghost" onclick="hideCreateModal()">Cancel</button>
+          <div class="form-group">
+            <label class="form-label">Description (optional)</label>
+            <input id="newDesc" class="form-input" placeholder="Brief project notes"/>
           </div>
+          <button class="btn btn-primary" onclick="doCreateProject()" id="createProjBtn" style="padding:9px 20px">Create Project</button>
+          <div id="createProjAlert" class="alert" style="margin-top:10px"></div>
         </div>
-      </div>
-    </div>`,
-    script: `
-    const showCreateModal = () => {
-      document.getElementById('createModal').style.display = 'flex';
-      document.getElementById('newDomain').focus();
-    };
-    const hideCreateModal = () => {
-      document.getElementById('createModal').style.display = 'none';
+      \`;
     };
 
-    const renderProjects = projects => {
-      if (!projects.length) {
-        document.getElementById('projectsContainer').innerHTML =
-          '<div class="card"><div class="empty-state"><div class="empty-icon">◈</div><h3>No projects yet</h3><p>Create your first project to start tracking client deployments.</p><button class="btn btn-primary" onclick="showCreateModal()">+ New Project</button></div></div>';
-        return;
-      }
-      document.getElementById('projectsContainer').innerHTML =
-        '<div class="card"><table class="data-table"><thead><tr><th>Domain</th><th>Status</th><th>Storage</th><th>Created</th></tr></thead><tbody>' +
-        projects.map(p => '<tr><td class="mono">' + esc(p.domain) + '</td><td>' + statusBadge(p.status || 'live') + '</td><td>' + esc(Math.round((p.storage||0)/1024)) + ' KB</td><td>' + fmtDate(p.created_at) + '</td></tr>').join('') +
-        '</tbody></table></div>';
-    };
-
-    const doCreate = async () => {
-      const btn = document.getElementById('createBtn');
+    const doCreateProject = async () => {
+      const btn = document.getElementById('createProjBtn');
       btn.innerHTML = '<span class="spinner"></span>';
       btn.disabled = true;
       try {
-        const domain = document.getElementById('newDomain').value.trim() || ('project-' + Date.now() + '.co.za');
-        await api('/api/deploy', {
-          method: 'POST',
-          body: JSON.stringify({ domain, files: [{ name:'index.html', contentType:'text/html', content:'<h1>' + domain + '</h1>' }] })
-        });
-        hideCreateModal();
-        loadProjects();
+        const domain = document.getElementById('newDomain').value.trim();
+        const description = document.getElementById('newDesc').value.trim();
+        if (!domain) throw new Error('Domain is required');
+        const data = await api('/api/projects', { method:'POST', body: JSON.stringify({ domain, description }) });
+        await loadProjects();
+        openProject(data.project.id);
       } catch(err) {
-        showAlert('createAlert', err.message, 'error');
-      } finally {
-        btn.innerHTML = 'Deploy Project';
+        showAlert('createProjAlert', err.message, 'error');
+        btn.innerHTML = 'Create Project';
         btn.disabled = false;
+      }
+    };
+
+    const openProject = async (projectId) => {
+      activeProjectId = projectId;
+      document.querySelectorAll('.proj-item').forEach(el => {
+        el.style.background = el.dataset.id === projectId ? 'var(--bg3)' : '';
+      });
+      document.getElementById('projectDetailPanel').innerHTML = '<div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading project...</p></div>';
+      try {
+        const data = await api('/api/projects/' + projectId);
+        const proj  = data.project;
+        const files = data.files || [];
+        const deploys = data.deployments || [];
+        const isLive  = proj.status === 'live';
+        const isBuild = proj.status === 'building';
+
+        document.getElementById('projectDetailPanel').innerHTML =
+          '<div class="card-header">' +
+          '<div><h2>' + esc(proj.domain) + '</h2>' +
+          '<p style="margin-top:3px">' + statusBadge(proj.status || 'draft') +
+          (isLive && proj.cf_pages_url ? ' &nbsp;<a href="' + esc(proj.cf_pages_url) + '" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue)">↗ ' + esc(proj.cf_pages_url) + '</a>' : '') +
+          '</p></div>' +
+          '<div style="display:flex;gap:8px">' +
+          (!isBuild ? '<button class="btn btn-primary" onclick="doDeploy(\'' + esc(projectId) + '\')" id="deployBtn" style="font-size:13px">' + (isLive ? '↺ Redeploy' : '🚀 Deploy to Pages') + '</button>' : '<button class="btn btn-ghost" disabled>Building...</button>') +
+          '</div></div>' +
+
+          // Description
+          (proj.description ? '<div style="padding:12px 20px;border-bottom:1px solid var(--border);font-size:13px;color:var(--muted)">' + esc(proj.description) + '</div>' : '') +
+
+          // File upload area
+          '<div style="padding:16px 20px;border-bottom:1px solid var(--border)">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+          '<div class="section-label">Files (' + files.length + ')</div>' +
+          '<label class="btn btn-ghost" style="font-size:12px;cursor:pointer">+ Upload File<input type="file" multiple style="display:none" onchange="uploadFiles(\'' + esc(projectId) + '\', this)"/></label>' +
+          '</div>' +
+          (files.length ? '<table class="data-table"><thead><tr><th>Filename</th><th>Type</th><th>Size</th><th></th></tr></thead><tbody>' +
+          files.map(f => '<tr><td class="mono" style="font-size:12px">' + esc(f.filename) + '</td><td style="color:var(--muted);font-size:12px">' + esc(f.content_type) + '</td><td style="font-size:12px">' + formatBytes(f.size_bytes) + '</td><td><button onclick="deleteFile(\'' + esc(projectId) + '\',\'' + esc(f.id) + '\')" class="btn btn-danger" style="font-size:11px;padding:3px 8px">✕</button></td></tr>').join('') +
+          '</tbody></table>'
+          : '<div style="border:2px dashed var(--border2);border-radius:8px;padding:24px;text-align:center;color:var(--muted);font-size:13px">Drop files here or click Upload File above</div>') +
+          '<div id="uploadAlert" class="alert" style="margin-top:8px"></div>' +
+          '</div>' +
+
+          // Deploy log
+          '<div style="padding:16px 20px">' +
+          '<div class="section-label" style="margin-bottom:10px">Deployment History</div>' +
+          (deploys.length ? '<table class="data-table"><thead><tr><th>Status</th><th>URL</th><th>Date</th></tr></thead><tbody>' +
+          deploys.map(d => '<tr><td>' + statusBadge(d.status) + '</td><td>' +
+          (d.pages_url ? '<a href="' + esc(d.pages_url) + '" target="_blank" style="font-size:12px">' + esc(d.pages_url) + '</a>' : (d.error_message ? '<span style="color:var(--red);font-size:12px">' + esc(d.error_message) + '</span>' : '—')) +
+          '</td><td style="font-size:12px">' + fmtDate(d.triggered_at) + '</td></tr>').join('') +
+          '</tbody></table>'
+          : '<p style="color:var(--muted);font-size:13px">No deployments yet. Upload files then click Deploy.</p>') +
+          '</div>';
+      } catch(err) {
+        document.getElementById('projectDetailPanel').innerHTML = '<div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
+      }
+    };
+
+    const formatBytes = n => {
+      const v = Number(n || 0);
+      if (v < 1024) return v + ' B';
+      if (v < 1024*1024) return (v/1024).toFixed(1) + ' KB';
+      return (v/1024/1024).toFixed(1) + ' MB';
+    };
+
+    const uploadFiles = async (projectId, input) => {
+      const filesToUpload = Array.from(input.files);
+      if (!filesToUpload.length) return;
+      showAlert('uploadAlert', 'Uploading ' + filesToUpload.length + ' file(s)...', 'info');
+      try {
+        for (const file of filesToUpload) {
+          await fetch(APP + '/api/projects/' + projectId + '/files', {
+            method: 'POST',
+            headers: {
+              authorization: 'Bearer ' + _getToken(),
+              'content-type': file.type || 'application/octet-stream',
+              'x-filename': encodeURIComponent(file.name)
+            },
+            body: file
+          }).then(async r => {
+            if (!r.ok) { const d = await r.json().catch(()=>{}); throw new Error(d?.error || 'Upload failed'); }
+          });
+        }
+        showAlert('uploadAlert', filesToUpload.length + ' file(s) uploaded!', 'success');
+        setTimeout(() => openProject(projectId), 500);
+      } catch(err) {
+        showAlert('uploadAlert', err.message, 'error');
+      }
+    };
+
+    const deleteFile = async (projectId, fileId) => {
+      if (!confirm('Delete this file?')) return;
+      try {
+        await api('/api/projects/' + projectId + '/files/' + fileId, { method:'DELETE' });
+        openProject(projectId);
+      } catch(err) { alert(err.message); }
+    };
+
+    const doDeploy = async (projectId) => {
+      const btn = document.getElementById('deployBtn');
+      if (btn) { btn.innerHTML = '<span class="spinner"></span> Deploying...'; btn.disabled = true; }
+      try {
+        const data = await api('/api/projects/' + projectId + '/deploy', { method:'POST' });
+        if (data.pagesUrl) {
+          showAlert('uploadAlert', '🚀 Deployed! Live at: ' + data.pagesUrl, 'success');
+        } else {
+          showAlert('uploadAlert', data.note || 'Deployment queued.', 'info');
+        }
+        await loadProjects();
+        setTimeout(() => openProject(projectId), 800);
+      } catch(err) {
+        showAlert('uploadAlert', err.message, 'error');
+        if (btn) { btn.innerHTML = '🚀 Deploy to Pages'; btn.disabled = false; }
       }
     };
 
     const loadProjects = async () => {
       try {
         const data = await api('/api/projects');
-        renderProjects(data.projects || []);
+        const projects = data.projects || [];
+        document.getElementById('projCount').textContent = projects.length + ' project' + (projects.length !== 1 ? 's' : '');
+        if (!projects.length) {
+          document.getElementById('projectListPanel').innerHTML = '<div class="empty-state" style="padding:24px 16px"><p>No projects yet</p></div>';
+          return;
+        }
+        document.getElementById('projectListPanel').innerHTML = projects.map(p =>
+          '<div class="proj-item" data-id="' + esc(p.id) + '" onclick="openProject(\'' + esc(p.id) + '\')"' +
+          ' style="padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.12s' + (p.id === activeProjectId ? ';background:var(--bg3)' : '') + '">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:3px">' +
+          '<strong style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">' + esc(p.domain) + '</strong>' +
+          statusBadge(p.status || 'draft') + '</div>' +
+          '<div style="font-size:11px;color:var(--muted)">' + formatBytes(p.storage) + ' · ' + fmtDate(p.created_at) + '</div></div>'
+        ).join('');
       } catch(err) {
-        document.getElementById('projectsContainer').innerHTML = '<div class="card"><div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div></div>';
+        document.getElementById('projectListPanel').innerHTML = '<div style="padding:12px"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
       }
     };
 
@@ -1647,7 +1768,83 @@ function pagePortalProfile(apiOrigin) {
   });
 }
 
-function pageAdminDashboard(apiOrigin) {
+function pageAdminProjects(apiOrigin) {
+  return adminShell({
+    apiOrigin,
+    title: 'Projects',
+    body: `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px" class="fade-up">
+      <div><h2 style="font-size:16px;font-weight:600">All Projects</h2><p style="color:var(--muted);font-size:13px">Every deployment across all clients</p></div>
+      <div style="display:flex;gap:8px">
+        <select id="statusFilter" class="form-input" style="width:auto;font-size:12px" onchange="loadProjects()">
+          <option value="">All statuses</option>
+          <option value="draft">Draft</option>
+          <option value="building">Building</option>
+          <option value="live">Live</option>
+          <option value="paused">Paused</option>
+        </select>
+        <button class="btn btn-ghost" onclick="loadProjects()">↺ Refresh</button>
+      </div>
+    </div>
+    <div class="card fade-up" id="projectsContainer">
+      <div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Loading...</p></div>
+    </div>`,
+    script: `
+    const setStatus = async (projectId, status) => {
+      try {
+        await adminApi('/api/admin/projects/' + projectId + '/status', { method:'POST', body: JSON.stringify({ status }) });
+        loadProjects();
+      } catch(err) { alert(err.message); }
+    };
+
+    const adminApiPost = async (path, body) => {
+      const key = _adminKey();
+      if (!key) throw new Error('No admin key');
+      const res = await fetch(APP + path, {
+        method: 'POST',
+        headers: { 'x-admin-key': key, 'content-type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(()=>({}));
+      if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
+      return data;
+    };
+
+    const loadProjects = async () => {
+      try {
+        const data = await adminApi('/api/admin/projects');
+        let projects = data.projects || [];
+        const filter = document.getElementById('statusFilter').value;
+        if (filter) projects = projects.filter(p => p.status === filter);
+        if (!projects.length) {
+          document.getElementById('projectsContainer').innerHTML = '<div class="empty-state"><div class="empty-icon">◈</div><h3>No projects found</h3></div>';
+          return;
+        }
+        document.getElementById('projectsContainer').innerHTML =
+          '<table class="data-table"><thead><tr><th>Domain</th><th>Client</th><th>Status</th><th>Live URL</th><th>Storage</th><th>Actions</th></tr></thead><tbody>' +
+          projects.map(p => '<tr>' +
+            '<td><strong style="font-size:13px">' + esc(p.domain) + '</strong></td>' +
+            '<td style="font-size:12px;color:var(--muted)">' + esc(p.name || p.email || '') + '</td>' +
+            '<td>' + statusBadge(p.status || 'draft') + '</td>' +
+            '<td>' + (p.cf_pages_url ? '<a href="' + esc(p.cf_pages_url) + '" target="_blank" style="font-size:12px">↗ View</a>' : '<span style="color:var(--muted);font-size:12px">—</span>') + '</td>' +
+            '<td style="font-size:12px">' + (p.storage > 0 ? (p.storage/1024).toFixed(1) + ' KB' : '—') + '</td>' +
+            '<td><select onchange="setStatus(\\'' + esc(p.id) + '\\', this.value)" style="background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:3px 6px;font-size:11px;cursor:pointer">' +
+            ['draft','live','paused','building'].map(s => '<option value="' + s + '"' + (p.status === s ? ' selected' : '') + '>' + s + '</option>').join('') +
+            '</select></td>' +
+          '</tr>').join('') +
+          '</tbody></table>';
+      } catch(err) {
+        document.getElementById('projectsContainer').innerHTML = '<div class="card-body"><div class="alert alert-error">' + esc(err.message) + '</div></div>';
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => { if (_adminKey()) loadProjects(); });
+    document.getElementById('adminKeyInput')?.addEventListener('change', loadProjects);
+    `
+  });
+}
+
+
   return adminShell({
     apiOrigin,
     title: 'Overview',
@@ -1940,6 +2137,7 @@ export function renderFrontend(pathname, apiOrigin) {
     case '/portal/profile':   return pagePortalProfile(apiOrigin);
     case '/admin/dashboard':  return pageAdminDashboard(apiOrigin);
     case '/admin/users':      return pageAdminUsers(apiOrigin);
+    case '/admin/projects':   return pageAdminProjects(apiOrigin);
     case '/admin/revenue':    return pageAdminRevenue(apiOrigin);
     case '/admin/tickets':    return pageAdminTickets(apiOrigin);
     default: return null;
