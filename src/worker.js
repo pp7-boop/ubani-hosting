@@ -224,7 +224,7 @@ async function serveStaticAsset(request, env) {
 async function register(request, env) {
   const body = await parseJson(request);
   if (!isValidEmail(body?.email) || typeof body?.password !== "string" || body.password.length < 8) {
-    return json({ error: "Valid email and password (min 8 chars) are required" }, { status: 400 });
+    return corsJson({ error: "Valid email and password (min 8 chars) are required" }, { status: 400 });
   }
 
   const db = getTursoClient(env);
@@ -244,32 +244,32 @@ async function register(request, env) {
     });
   } catch (error) {
     if (String(error.message || "").toLowerCase().includes("unique")) {
-      return json({ error: "Email already registered" }, { status: 409 });
+      return corsJson({ error: "Email already registered" }, { status: 409 });
     }
     throw error;
   }
 
   const token = await signJwt({ sub: id, email: body.email.toLowerCase() }, env);
-  return json({ user: { id, email: body.email.toLowerCase(), name, plan: "free" }, token }, { status: 201 });
+  return corsJson({ user: { id, email: body.email.toLowerCase(), name, plan: "free" }, token }, { status: 201 });
 }
 
 async function updateProfile(request, env, userId) {
   const body = await parseJson(request);
   const name = typeof body?.name === "string" ? body.name.trim().slice(0, 120) : null;
-  if (!name) return json({ error: "name is required" }, { status: 400 });
+  if (!name) return corsJson({ error: "name is required" }, { status: 400 });
 
   const db = getTursoClient(env);
   await db.execute({
     sql: "UPDATE users SET name = ? WHERE id = ?",
     args: [name, userId]
   });
-  return json({ ok: true, name });
+  return corsJson({ ok: true, name });
 }
 
 async function login(request, env) {
   const body = await parseJson(request);
   if (!isValidEmail(body?.email) || typeof body?.password !== "string") {
-    return json({ error: "email and password are required" }, { status: 400 });
+    return corsJson({ error: "email and password are required" }, { status: 400 });
   }
 
   const db = getTursoClient(env);
@@ -279,17 +279,17 @@ async function login(request, env) {
   });
 
   if (!result.rows.length) {
-    return json({ error: "Invalid credentials" }, { status: 401 });
+    return corsJson({ error: "Invalid credentials" }, { status: 401 });
   }
 
   const user = result.rows[0];
   const ok = await verifyPassword(body.password, String(user.password));
   if (!ok) {
-    return json({ error: "Invalid credentials" }, { status: 401 });
+    return corsJson({ error: "Invalid credentials" }, { status: 401 });
   }
 
   const token = await signJwt({ sub: String(user.id), email: String(user.email) }, env);
-  return json({ user: { id: user.id, email: user.email, name: user.name, plan: user.plan, credit: user.credit }, token });
+  return corsJson({ user: { id: user.id, email: user.email, name: user.name, plan: user.plan, credit: user.credit }, token });
 }
 
 
@@ -297,7 +297,7 @@ async function login(request, env) {
 async function invoice(request, env, userId) {
   const body = await parseJson(request);
   if (typeof body?.amount !== "number") {
-    return json({ error: "numeric amount is required" }, { status: 400 });
+    return corsJson({ error: "numeric amount is required" }, { status: 400 });
   }
 
   const db = getTursoClient(env);
@@ -309,7 +309,7 @@ async function invoice(request, env, userId) {
     args: [id, userId, body.amount, "pending"]
   });
 
-  return json({ id, status: "pending" }, { status: 201 });
+  return corsJson({ id, status: "pending" }, { status: 201 });
 }
 
 function getYocoSecret(env) {
@@ -368,7 +368,7 @@ async function createYocoCheckout(amount, invoiceId, request, env) {
 async function createInvoiceCheckout(request, env, userId) {
   const body = await parseJson(request);
   if (!Number.isInteger(body?.amount) || body.amount <= 0) {
-    return json({ error: "amount must be a positive integer in cents" }, { status: 400 });
+    return corsJson({ error: "amount must be a positive integer in cents" }, { status: 400 });
   }
 
   const db = getTursoClient(env);
@@ -399,7 +399,7 @@ async function createInvoiceCheckout(request, env, userId) {
     ]
   });
 
-  return json({
+  return corsJson({
     invoiceId,
     amount: body.amount,
     status: "pending",
@@ -414,8 +414,8 @@ async function me(env, userId) {
     args: [userId]
   });
 
-  if (!result.rows.length) return json({ error: "User not found" }, { status: 404 });
-  return json({ user: result.rows[0] });
+  if (!result.rows.length) return corsJson({ error: "User not found" }, { status: 404 });
+  return corsJson({ user: result.rows[0] });
 }
 
 async function listProjects(env, userId) {
@@ -428,7 +428,7 @@ async function listProjects(env, userId) {
           LIMIT 100`,
     args: [userId]
   });
-  return json({ projects: result.rows });
+  return corsJson({ projects: result.rows });
 }
 
 async function getProject(request, env, userId) {
@@ -451,8 +451,8 @@ async function getProject(request, env, userId) {
       args: [projectId]
     })
   ]);
-  if (!projResult.rows.length) return json({ error: "Project not found" }, { status: 404 });
-  return json({
+  if (!projResult.rows.length) return corsJson({ error: "Project not found" }, { status: 404 });
+  return corsJson({
     project: projResult.rows[0],
     files: filesResult.rows,
     deployments: deploysResult.rows
@@ -469,7 +469,7 @@ async function updateProject(request, env, userId) {
     sql: "SELECT id FROM projects WHERE id = ? AND user_id = ? LIMIT 1",
     args: [projectId, userId]
   });
-  if (!check.rows.length) return json({ error: "Project not found" }, { status: 404 });
+  if (!check.rows.length) return corsJson({ error: "Project not found" }, { status: 404 });
 
   const updates = [];
   const args = [];
@@ -478,18 +478,18 @@ async function updateProject(request, env, userId) {
   const allowedStatuses = ["draft", "live", "paused"];
   if (body?.status && allowedStatuses.includes(body.status)) { updates.push("status = ?"); args.push(body.status); }
 
-  if (!updates.length) return json({ error: "No valid fields to update" }, { status: 400 });
+  if (!updates.length) return corsJson({ error: "No valid fields to update" }, { status: 400 });
   args.push(projectId);
 
   await db.execute({ sql: `UPDATE projects SET ${updates.join(", ")} WHERE id = ?`, args });
-  return json({ ok: true });
+  return corsJson({ ok: true });
 }
 
 // ── Phase 3: Project create (new) ─────────────────────────────
 async function createProject(request, env, userId) {
   const body = await parseJson(request);
   const domain = String(body?.domain || "").trim();
-  if (!domain) return json({ error: "domain is required" }, { status: 400 });
+  if (!domain) return corsJson({ error: "domain is required" }, { status: 400 });
   const db = getTursoClient(env);
   const projectId = crypto.randomUUID();
   await db.execute({
@@ -497,7 +497,7 @@ async function createProject(request, env, userId) {
           VALUES (?, ?, ?, 'draft', ?, 0)`,
     args: [projectId, userId, domain, String(body?.description || "")]
   });
-  return json({ project: { id: projectId, domain, status: "draft" } }, { status: 201 });
+  return corsJson({ project: { id: projectId, domain, status: "draft" } }, { status: 201 });
 }
 
 // ── R2 File Upload ────────────────────────────────────────────
@@ -508,10 +508,10 @@ async function uploadFile(request, env, userId) {
     sql: "SELECT id FROM projects WHERE id = ? AND user_id = ? LIMIT 1",
     args: [projectId, userId]
   });
-  if (!projCheck.rows.length) return json({ error: "Project not found" }, { status: 404 });
+  if (!projCheck.rows.length) return corsJson({ error: "Project not found" }, { status: 404 });
 
   if (!env.FILES_BUCKET) {
-    return json({ error: "R2 bucket not configured — add FILES_BUCKET binding to wrangler.toml" }, { status: 503 });
+    return corsJson({ error: "R2 bucket not configured — add FILES_BUCKET binding to wrangler.toml" }, { status: 503 });
   }
 
   const contentType  = request.headers.get("content-type") || "application/octet-stream";
@@ -520,8 +520,8 @@ async function uploadFile(request, env, userId) {
   const r2Key        = `projects/${projectId}/${safeFilename}`;
 
   const bodyBytes = await request.arrayBuffer();
-  if (!bodyBytes.byteLength) return json({ error: "Empty file body" }, { status: 400 });
-  if (bodyBytes.byteLength > 25 * 1024 * 1024) return json({ error: "File too large (25MB max)" }, { status: 413 });
+  if (!bodyBytes.byteLength) return corsJson({ error: "Empty file body" }, { status: 400 });
+  if (bodyBytes.byteLength > 25 * 1024 * 1024) return corsJson({ error: "File too large (25MB max)" }, { status: 413 });
 
   await env.FILES_BUCKET.put(r2Key, bodyBytes, {
     httpMetadata: { contentType },
@@ -542,7 +542,7 @@ async function uploadFile(request, env, userId) {
     args: [projectId, projectId]
   });
 
-  return json({ ok: true, fileId, r2Key, filename: safeFilename, size: bodyBytes.byteLength }, { status: 201 });
+  return corsJson({ ok: true, fileId, r2Key, filename: safeFilename, size: bodyBytes.byteLength }, { status: 201 });
 }
 
 async function deleteFile(request, env, userId) {
@@ -554,7 +554,7 @@ async function deleteFile(request, env, userId) {
     sql: "SELECT r2_key FROM r2_files WHERE id = ? AND project_id = ? AND user_id = ? LIMIT 1",
     args: [fileId, projectId, userId]
   });
-  if (!fileResult.rows.length) return json({ error: "File not found" }, { status: 404 });
+  if (!fileResult.rows.length) return corsJson({ error: "File not found" }, { status: 404 });
   const r2Key = String(fileResult.rows[0].r2_key);
   if (env.FILES_BUCKET) await env.FILES_BUCKET.delete(r2Key);
   await db.execute({ sql: "DELETE FROM r2_files WHERE id = ?", args: [fileId] });
@@ -562,7 +562,7 @@ async function deleteFile(request, env, userId) {
     sql: `UPDATE projects SET storage = (SELECT COALESCE(SUM(size_bytes),0) FROM r2_files WHERE project_id = ?) WHERE id = ?`,
     args: [projectId, projectId]
   });
-  return json({ ok: true });
+  return corsJson({ ok: true });
 }
 
 async function serveProjectFile(request, env) {
@@ -588,7 +588,7 @@ async function deployToPages(request, env, userId) {
     sql: "SELECT id, domain, cf_pages_project FROM projects WHERE id = ? AND user_id = ? LIMIT 1",
     args: [projectId, userId]
   });
-  if (!projResult.rows.length) return json({ error: "Project not found" }, { status: 404 });
+  if (!projResult.rows.length) return corsJson({ error: "Project not found" }, { status: 404 });
   const project = projResult.rows[0];
 
   // Immediately mark as building
@@ -605,7 +605,7 @@ async function deployToPages(request, env, userId) {
             VALUES (?, ?, ?, 'live', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       args: [deployId, projectId, userId]
     });
-    return json({
+    return corsJson({
       ok: true, deployId, status: "live",
       note: "CF_ACCOUNT_ID / CF_API_TOKEN not set. Project marked live without real Pages deployment. Add credentials to wrangler secrets to enable full deployment."
     });
@@ -637,7 +637,7 @@ async function deployToPages(request, env, userId) {
       const errData = await createRes.json().catch(() => ({}));
       const msg = errData?.errors?.[0]?.message || `CF Pages create failed (${createRes.status})`;
       await db.execute({ sql: "UPDATE projects SET status = 'draft' WHERE id = ?", args: [projectId] });
-      return json({ error: msg }, { status: 502 });
+      return corsJson({ error: msg }, { status: 502 });
     }
   }
 
@@ -677,7 +677,7 @@ async function deployToPages(request, env, userId) {
             VALUES (?, ?, ?, 'failed', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       args: [deployId, projectId, userId, msg]
     });
-    return json({ error: msg }, { status: 502 });
+    return corsJson({ error: msg }, { status: 502 });
   }
 
   const cfDeployId = String(deployData?.result?.id || "");
@@ -695,7 +695,7 @@ async function deployToPages(request, env, userId) {
     args: [deployId, projectId, userId, cfDeployId, pagesUrl]
   });
 
-  return json({ ok: true, deployId, status: "live", pagesUrl, cfDeployId });
+  return corsJson({ ok: true, deployId, status: "live", pagesUrl, cfDeployId });
 }
 
 async function listDeployments(request, env, userId) {
@@ -707,7 +707,7 @@ async function listDeployments(request, env, userId) {
           ORDER BY triggered_at DESC LIMIT 20`,
     args: [projectId, userId]
   });
-  return json({ deployments: result.rows });
+  return corsJson({ deployments: result.rows });
 }
 
 // ── Admin: all projects ────────────────────────────────────────
@@ -718,7 +718,7 @@ async function adminProjects(env) {
           FROM projects p JOIN users u ON u.id = p.user_id
           ORDER BY p.created_at DESC LIMIT 200`
   });
-  return json({ projects: result.rows });
+  return corsJson({ projects: result.rows });
 }
 
 async function adminUpdateProjectStatus(request, env) {
@@ -726,25 +726,25 @@ async function adminUpdateProjectStatus(request, env) {
   const body = await parseJson(request);
   const allowed = ["draft", "live", "paused", "building"];
   if (!body?.status || !allowed.includes(body.status)) {
-    return json({ error: `status must be one of: ${allowed.join(", ")}` }, { status: 400 });
+    return corsJson({ error: `status must be one of: ${allowed.join(", ")}` }, { status: 400 });
   }
   const db = getTursoClient(env);
   await db.execute({ sql: "UPDATE projects SET status = ? WHERE id = ?", args: [body.status, projectId] });
-  return json({ ok: true });
+  return corsJson({ ok: true });
 }
 
 // ── Legacy deploy (kept for backward compat) ──────────────────
 async function deploy(request, env, userId) {
   const body   = await parseJson(request);
   const domain = String(body?.domain || "").trim();
-  if (!domain) return json({ error: "domain is required" }, { status: 400 });
+  if (!domain) return corsJson({ error: "domain is required" }, { status: 400 });
   const db = getTursoClient(env);
   const projectId = crypto.randomUUID();
   await db.execute({
     sql: "INSERT INTO projects(id, user_id, domain, status, storage) VALUES (?, ?, ?, 'draft', 0)",
     args: [projectId, userId, domain]
   });
-  return json({ status: "draft", projectId }, { status: 201 });
+  return corsJson({ status: "draft", projectId }, { status: 201 });
 }
 
 
@@ -758,14 +758,14 @@ async function listInvoices(env, userId) {
           LIMIT 100`,
     args: [userId]
   });
-  return json({ invoices: result.rows });
+  return corsJson({ invoices: result.rows });
 }
 
 async function createSupportTicket(request, env, userId) {
   const body = await parseJson(request);
   const subject = String(body?.subject || "").trim();
   const message = String(body?.message || "").trim();
-  if (!subject) return json({ error: "subject is required" }, { status: 400 });
+  if (!subject) return corsJson({ error: "subject is required" }, { status: 400 });
 
   const db = getTursoClient(env);
   const ticketId = crypto.randomUUID();
@@ -810,14 +810,14 @@ async function createSupportTicket(request, env, userId) {
     })
   }).catch(() => {}); // don't fail the request if email fails
 
-  return json({ ticket: { id: ticketId, subject, message, status: "open" } }, { status: 201 });
+  return corsJson({ ticket: { id: ticketId, subject, message, status: "open" } }, { status: 201 });
 }
 
 async function replyToTicket(request, env, userId) {
   const ticketId = new URL(request.url).pathname.split("/")[4]; // /api/support/tickets/:id/reply
   const body = await parseJson(request);
   const replyBody = String(body?.message || "").trim();
-  if (!replyBody) return json({ error: "message is required" }, { status: 400 });
+  if (!replyBody) return corsJson({ error: "message is required" }, { status: 400 });
 
   const db = getTursoClient(env);
 
@@ -826,7 +826,7 @@ async function replyToTicket(request, env, userId) {
     sql: "SELECT id, subject FROM tickets WHERE id = ? AND user_id = ? LIMIT 1",
     args: [ticketId, userId]
   });
-  if (!ticketResult.rows.length) return json({ error: "Ticket not found" }, { status: 404 });
+  if (!ticketResult.rows.length) return corsJson({ error: "Ticket not found" }, { status: 404 });
 
   const msgId = crypto.randomUUID();
   await db.execute({
@@ -839,7 +839,7 @@ async function replyToTicket(request, env, userId) {
     args: [ticketId]
   });
 
-  return json({ ok: true, messageId: msgId });
+  return corsJson({ ok: true, messageId: msgId });
 }
 
 async function getTicketThread(request, env, userId) {
@@ -850,21 +850,21 @@ async function getTicketThread(request, env, userId) {
     sql: "SELECT id, subject, message, status, created_at FROM tickets WHERE id = ? AND user_id = ? LIMIT 1",
     args: [ticketId, userId]
   });
-  if (!ticketResult.rows.length) return json({ error: "Ticket not found" }, { status: 404 });
+  if (!ticketResult.rows.length) return corsJson({ error: "Ticket not found" }, { status: 404 });
 
   const messagesResult = await db.execute({
     sql: "SELECT id, author_role, body, created_at FROM ticket_messages WHERE ticket_id = ? ORDER BY created_at ASC",
     args: [ticketId]
   });
 
-  return json({ ticket: ticketResult.rows[0], messages: messagesResult.rows });
+  return corsJson({ ticket: ticketResult.rows[0], messages: messagesResult.rows });
 }
 
 async function adminReplyToTicket(request, env) {
   const ticketId = new URL(request.url).pathname.split("/")[5]; // /api/admin/tickets/:id/reply
   const body = await parseJson(request);
   const replyBody = String(body?.message || "").trim();
-  if (!replyBody) return json({ error: "message is required" }, { status: 400 });
+  if (!replyBody) return corsJson({ error: "message is required" }, { status: 400 });
 
   const db = getTursoClient(env);
 
@@ -875,7 +875,7 @@ async function adminReplyToTicket(request, env) {
           WHERE t.id = ? LIMIT 1`,
     args: [ticketId]
   });
-  if (!ticketResult.rows.length) return json({ error: "Ticket not found" }, { status: 404 });
+  if (!ticketResult.rows.length) return corsJson({ error: "Ticket not found" }, { status: 404 });
 
   const ticket   = ticketResult.rows[0];
   const msgId    = crypto.randomUUID();
@@ -919,7 +919,7 @@ async function adminReplyToTicket(request, env) {
     });
   }
 
-  return json({ ok: true, messageId: msgId });
+  return corsJson({ ok: true, messageId: msgId });
 }
 
 async function adminGetTicketThread(request, env) {
@@ -932,14 +932,14 @@ async function adminGetTicketThread(request, env) {
           WHERE t.id = ? LIMIT 1`,
     args: [ticketId]
   });
-  if (!ticketResult.rows.length) return json({ error: "Ticket not found" }, { status: 404 });
+  if (!ticketResult.rows.length) return corsJson({ error: "Ticket not found" }, { status: 404 });
 
   const messagesResult = await db.execute({
     sql: "SELECT id, author_role, body, created_at FROM ticket_messages WHERE ticket_id = ? ORDER BY created_at ASC",
     args: [ticketId]
   });
 
-  return json({ ticket: ticketResult.rows[0], messages: messagesResult.rows });
+  return corsJson({ ticket: ticketResult.rows[0], messages: messagesResult.rows });
 }
 
 async function adminCloseTicket(request, env) {
@@ -949,7 +949,7 @@ async function adminCloseTicket(request, env) {
     sql: "UPDATE tickets SET status = 'closed', updated_at = CURRENT_TIMESTAMP WHERE id = ?",
     args: [ticketId]
   });
-  return json({ ok: true });
+  return corsJson({ ok: true });
 }
 
 async function listSupportTickets(env, userId) {
@@ -962,16 +962,16 @@ async function listSupportTickets(env, userId) {
           LIMIT 100`,
     args: [userId]
   });
-  return json({ tickets: result.rows });
+  return corsJson({ tickets: result.rows });
 }
 
 function requireAdmin(request, env) {
   const configured = String(env.ADMIN_API_KEY || "").trim();
-  if (!configured) return json({ error: "ADMIN_API_KEY is not configured" }, { status: 503 });
+  if (!configured) return corsJson({ error: "ADMIN_API_KEY is not configured" }, { status: 503 });
 
   const provided = String(request.headers.get("x-admin-key") || "").trim();
   if (!provided || !constantTimeEqual(configured, provided)) {
-    return json({ error: "Unauthorized admin request" }, { status: 401 });
+    return corsJson({ error: "Unauthorized admin request" }, { status: 401 });
   }
   return null;
 }
@@ -984,7 +984,7 @@ async function adminSummary(env) {
     db.execute({ sql: "SELECT COUNT(*) AS count FROM invoices" }),
     db.execute({ sql: "SELECT COALESCE(SUM(amount), 0) AS cents FROM invoices WHERE status = 'paid'" })
   ]);
-  return json({
+  return corsJson({
     users: Number(users.rows[0]?.count || 0),
     projects: Number(projects.rows[0]?.count || 0),
     invoices: Number(invoices.rows[0]?.count || 0),
@@ -1000,7 +1000,7 @@ async function adminUsers(env) {
           ORDER BY created_at DESC
           LIMIT 200`
   });
-  return json({ users: result.rows });
+  return corsJson({ users: result.rows });
 }
 
 async function adminRevenue(env) {
@@ -1020,7 +1020,7 @@ async function adminRevenue(env) {
             LIMIT 100`
     })
   ]);
-  return json({ totals: byStatus.rows, latestPaid: latestPaid.rows });
+  return corsJson({ totals: byStatus.rows, latestPaid: latestPaid.rows });
 }
 
 async function adminTickets(env) {
@@ -1031,7 +1031,7 @@ async function adminTickets(env) {
           ORDER BY created_at DESC
           LIMIT 200`
   });
-  return json({ tickets: result.rows });
+  return corsJson({ tickets: result.rows });
 }
 
 function normalizePaymentStatus(value) {
@@ -1085,14 +1085,14 @@ async function yocoWebhook(request, env, rawBody) {
   const webhookSecret = env.YOCO_WEBHOOK_SECRET || "";
   if (webhookSecret) {
     const verified = await verifyYocoWebhookSignature(request, rawBody, webhookSecret);
-    if (!verified) return json({ error: "Invalid Yoco webhook signature" }, { status: 401 });
+    if (!verified) return corsJson({ error: "Invalid Yoco webhook signature" }, { status: 401 });
   }
 
   let payload;
   try {
     payload = JSON.parse(rawBody);
   } catch {
-    return json({ error: "Invalid JSON body" }, { status: 400 });
+    return corsJson({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const invoiceId =
@@ -1103,7 +1103,7 @@ async function yocoWebhook(request, env, rawBody) {
     null;
 
   if (!invoiceId || typeof invoiceId !== "string") {
-    return json({ error: "Missing invoice reference in webhook payload" }, { status: 400 });
+    return corsJson({ error: "Missing invoice reference in webhook payload" }, { status: 400 });
   }
 
   const status = normalizePaymentStatus(payload?.status || payload?.eventType);
@@ -1124,7 +1124,7 @@ async function yocoWebhook(request, env, rawBody) {
     args: [status, providerRef, JSON.stringify(payload), invoiceId]
   });
 
-  return json({ ok: true, invoiceId, status });
+  return corsJson({ ok: true, invoiceId, status });
 }
 
 // ── Email via Resend ──────────────────────────────────────────
@@ -1195,6 +1195,26 @@ async function sendEmail(env, { to, subject, html }) {
   return data;
 }
 
+const CORS_HEADERS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+  "access-control-allow-headers": "content-type, authorization, x-admin-key, x-filename",
+  "access-control-max-age": "86400"
+};
+
+function corsJson(data, init = {}) {
+  return new Response(JSON.stringify(data), {
+    ...init,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      ...SECURITY_HEADERS,
+      ...CORS_HEADERS,
+      ...(init.headers || {})
+    }
+  });
+}
+
 // ─────────────────────────────────────────────────────────────
 
 export default {
@@ -1203,6 +1223,11 @@ export default {
     const clientIp = getClientIp(request);
     const isHead = request.method === "HEAD";
     const host = url.hostname.toLowerCase();
+
+    // Handle CORS preflight immediately — before any auth or rate limiting
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
 
     try {
       if ((request.method === "GET" || isHead) && url.pathname.startsWith("/assets/")) {
@@ -1242,23 +1267,23 @@ export default {
 
       if (request.method === "POST" && url.pathname === "/api/register") {
         const rl = consumeRateLimit(`register:${clientIp}`, 20, 10 * 60 * 1000);
-        if (!rl.allowed) return json({ error: "Too many registration attempts" }, { status: 429, headers: { "retry-after": String(rl.retryAfterSeconds) } });
+        if (!rl.allowed) return corsJson({ error: "Too many registration attempts" }, { status: 429, headers: { "retry-after": String(rl.retryAfterSeconds) } });
         return await register(request, env);
       }
       if (request.method === "POST" && url.pathname === "/api/login") {
         const rl = consumeRateLimit(`login:${clientIp}`, 30, 10 * 60 * 1000);
-        if (!rl.allowed) return json({ error: "Too many login attempts" }, { status: 429, headers: { "retry-after": String(rl.retryAfterSeconds) } });
+        if (!rl.allowed) return corsJson({ error: "Too many login attempts" }, { status: 429, headers: { "retry-after": String(rl.retryAfterSeconds) } });
         return await login(request, env);
       }
-      if (request.method === "GET" && url.pathname === "/api") return json({ message: "Ubani API", health: "/health" });
+      if (request.method === "GET" && url.pathname === "/api") return corsJson({ message: "Ubani API", health: "/health" });
       if (request.method === "POST" && url.pathname === "/webhooks/yoco") {
         const rl = consumeRateLimit(`webhook:${clientIp}`, 180, 60 * 1000);
-        if (!rl.allowed) return json({ error: "Too many webhook requests" }, { status: 429, headers: { "retry-after": String(rl.retryAfterSeconds) } });
+        if (!rl.allowed) return corsJson({ error: "Too many webhook requests" }, { status: 429, headers: { "retry-after": String(rl.retryAfterSeconds) } });
         const rawBody = await request.text();
         return await yocoWebhook(request, env, rawBody);
       }
 
-      if (request.method === "GET" && url.pathname === "/health") return json({ ok: true });
+      if (request.method === "GET" && url.pathname === "/health") return corsJson({ ok: true });
       if (isHead && url.pathname === "/health") {
         const response = json({ ok: true });
         return headFromResponse(response);
@@ -1320,7 +1345,7 @@ export default {
 
       const authUserId = await getAuthUserId(request, env);
       if (!authUserId) {
-        return json({ error: "Unauthorized" }, { status: 401 });
+        return corsJson({ error: "Unauthorized" }, { status: 401 });
       }
 
       // ── Public file serving (R2)
@@ -1354,7 +1379,7 @@ export default {
 
       if (request.method === "GET" && url.pathname === "/api/invoices") return await listInvoices(env, authUserId);
 
-      return json({ message: "Ubani API" });
+      return corsJson({ message: "Ubani API" });
     } catch (error) {
       const message =
         error instanceof Error
@@ -1362,7 +1387,7 @@ export default {
           : typeof error === "string"
             ? error
             : "Unexpected error";
-      return json({ error: message }, { status: 500 });
+      return corsJson({ error: message }, { status: 500 });
     }
   }
 };
