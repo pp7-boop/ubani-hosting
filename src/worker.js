@@ -37,35 +37,28 @@ function json(data, init = {}) {
   });
 }
 
-function buildCsp(apiOrigin) {
-  // Allow 'self' plus the configured API origin (handles both dev and prod)
-  const connectSrc = ["'self'", "https://cloudflareinsights.com", "https://*.cloudflareinsights.com"];
-  if (apiOrigin && !connectSrc.includes(apiOrigin)) connectSrc.push(apiOrigin);
-  // Always include both localhost variants for dev
-  if (!connectSrc.some(s => s.includes("localhost"))) {
-    connectSrc.push("http://localhost:8787", "https://localhost:8787");
-  }
+function buildCsp() {
   return [
     "default-src 'self'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src https://fonts.gstatic.com",
     "img-src 'self' https: data:",
     "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
-    `connect-src ${connectSrc.join(" ")}`,
+    "connect-src 'self' https://api.ubanihosting.co.za https://ubanihosting.co.za https://www.ubanihosting.co.za http://localhost:8787 https://localhost:8787 http://127.0.0.1:8787 https://cloudflareinsights.com https://*.cloudflareinsights.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'"
   ].join("; ");
 }
 
-function html(content, init = {}, apiOrigin = "") {
+function html(content, init = {}) {
   return new Response(content, {
     ...init,
     headers: {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "public, max-age=120",
       ...SECURITY_HEADERS,
-      "content-security-policy": buildCsp(apiOrigin),
+      "content-security-policy": buildCsp(),
       ...(init.headers || {})
     }
   });
@@ -1230,7 +1223,7 @@ export default {
         const homepage = host === "www.ubanihosting.co.za"
           ? renderDesignerLanding(apiOrigin)
           : renderFrontend(url.pathname, apiOrigin);
-        const response = html(homepage, {}, apiOrigin);
+        const response = html(homepage);
         return isHead ? headFromResponse(response) : response;
       }
 
@@ -1238,7 +1231,7 @@ export default {
         const apiOrigin = getCanonicalApiOrigin(request, env);
         const frontend = renderFrontend(url.pathname, apiOrigin);
         if (frontend) {
-          const response = html(frontend, {}, apiOrigin);
+          const response = html(frontend);
           return isHead ? headFromResponse(response) : response;
         }
       }
