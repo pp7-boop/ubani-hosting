@@ -1845,6 +1845,7 @@ function pageAdminProjects(apiOrigin) {
 }
 
 
+function pageAdminDashboard(apiOrigin) {
   return adminShell({
     apiOrigin,
     title: 'Overview',
