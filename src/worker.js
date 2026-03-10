@@ -976,6 +976,62 @@ function requireAdmin(request, env) {
   return null;
 }
 
+async function runMigrations(env) {
+  const db = getTursoClient(env);
+  const results = [];
+
+  const stmts = [
+    // Phase 2
+    "ALTER TABLE users ADD COLUMN name TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'",
+    "ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT 'live'",
+    "ALTER TABLE projects ADD COLUMN description TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE tickets ADD COLUMN message TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE tickets ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP",
+    `CREATE TABLE IF NOT EXISTS ticket_messages (
+      id TEXT PRIMARY KEY, ticket_id TEXT NOT NULL, author_id TEXT NOT NULL,
+      author_role TEXT NOT NULL, body TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`,
+    `CREATE TABLE IF NOT EXISTS notifications (
+      id TEXT PRIMARY KEY, user_id TEXT NOT NULL, type TEXT NOT NULL,
+      subject TEXT NOT NULL, sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      status TEXT NOT NULL DEFAULT 'sent', error TEXT)`,
+    // Phase 3
+    "ALTER TABLE projects ADD COLUMN cf_pages_project TEXT",
+    "ALTER TABLE projects ADD COLUMN cf_pages_url TEXT",
+    "ALTER TABLE projects ADD COLUMN cf_deployment_id TEXT",
+    "ALTER TABLE projects ADD COLUMN r2_prefix TEXT",
+    `CREATE TABLE IF NOT EXISTS r2_files (
+      id TEXT PRIMARY KEY, project_id TEXT NOT NULL, user_id TEXT NOT NULL,
+      r2_key TEXT NOT NULL UNIQUE, filename TEXT NOT NULL,
+      content_type TEXT NOT NULL DEFAULT 'application/octet-stream',
+      size_bytes INTEGER NOT NULL DEFAULT 0,
+      uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP)`,
+    `CREATE TABLE IF NOT EXISTS deployments (
+      id TEXT PRIMARY KEY, project_id TEXT NOT NULL, user_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending', cf_deploy_id TEXT, pages_url TEXT,
+      triggered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      completed_at DATETIME, error_message TEXT)`,
+    "INSERT OR IGNORE INTO migrations(id) VALUES ('0004_phase2')",
+    "INSERT OR IGNORE INTO migrations(id) VALUES ('0005_phase3')",
+  ];
+
+  for (const sql of stmts) {
+    try {
+      await db.execute(sql);
+      results.push({ sql: sql.slice(0, 60), ok: true });
+    } catch (e) {
+      const msg = String(e?.message || e);
+      // "duplicate column" is fine — already applied
+      const skipped = msg.includes("duplicate column") || msg.includes("already exists");
+      results.push({ sql: sql.slice(0, 60), ok: skipped, skipped, error: skipped ? null : msg });
+    }
+  }
+
+  const failed = results.filter(r => !r.ok);
+  return corsJson({ done: true, results, failed: failed.length }, { status: failed.length ? 207 : 200 });
+}
+
 async function adminSummary(env) {
   const db = getTursoClient(env);
   const [users, projects, invoices, paidRevenue] = await Promise.all([
@@ -1304,16 +1360,16 @@ export default {
         if (adminError) return adminError;
         return await adminRevenue(env);
       }
+      if (request.method === "POST" && url.pathname === "/api/admin/migrate") {
+        const adminError = requireAdmin(request, env);
+        if (adminError) return adminError;
+        return await runMigrations(env);
+      }
       if (request.method === "GET" && url.pathname === "/api/admin/tickets") {
         const adminError = requireAdmin(request, env);
         if (adminError) return adminError;
         return await adminTickets(env);
       }
-
-      if (request.method === "GET" && url.pathname === "/api/admin/tickets") {
-        const adminError = requireAdmin(request, env);
-        if (adminError) return adminError;
-        return await adminTickets(env);
       }
       if (request.method === "GET" && /^\/api\/admin\/tickets\/[^/]+$/.test(url.pathname)) {
         const adminError = requireAdmin(request, env);
