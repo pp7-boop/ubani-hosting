@@ -987,7 +987,7 @@ async function runMigrations(env) {
     "ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT 'live'",
     "ALTER TABLE projects ADD COLUMN description TEXT NOT NULL DEFAULT ''",
     "ALTER TABLE tickets ADD COLUMN message TEXT NOT NULL DEFAULT ''",
-    "ALTER TABLE tickets ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP",
+    "ALTER TABLE tickets ADD COLUMN updated_at DATETIME DEFAULT '1970-01-01 00:00:00'",
     `CREATE TABLE IF NOT EXISTS ticket_messages (
       id TEXT PRIMARY KEY, ticket_id TEXT NOT NULL, author_id TEXT NOT NULL,
       author_role TEXT NOT NULL, body TEXT NOT NULL,
