@@ -1827,7 +1827,7 @@ function pageAdminProjects(apiOrigin) {
             '<td>' + statusBadge(p.status || 'draft') + '</td>' +
             '<td>' + (p.cf_pages_url ? '<a href="' + esc(p.cf_pages_url) + '" target="_blank" style="font-size:12px">↗ View</a>' : '<span style="color:var(--muted);font-size:12px">—</span>') + '</td>' +
             '<td style="font-size:12px">' + (p.storage > 0 ? (p.storage/1024).toFixed(1) + ' KB' : '—') + '</td>' +
-            '<td><select onchange="setStatus(\\'' + esc(p.id) + '\\', this.value)" style="background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:3px 6px;font-size:11px;cursor:pointer">' +
+            '<td><select onchange="setStatus('" + esc(p.id) + "', this.value)" style="background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:3px 6px;font-size:11px;cursor:pointer">' +
             ['draft','live','paused','building'].map(s => '<option value="' + s + '"' + (p.status === s ? ' selected' : '') + '>' + s + '</option>').join('') +
             '</select></td>' +
           '</tr>').join('') +
@@ -2015,7 +2015,7 @@ function pageAdminTickets(apiOrigin) {
           '</div>' +
           (isClosed
             ? '<button class="btn btn-ghost" style="font-size:12px" disabled>Closed</button>'
-            : '<button class="btn btn-danger" style="font-size:12px" onclick="closeTicket(\\'' + esc(ticketId) + '\\')">Close Ticket</button>'
+            : '<button class="btn btn-danger" style="font-size:12px" onclick="closeTicket(\'' + esc(ticketId) + '\')">Close Ticket</button>'
           ) +
           '</div>' +
           '<div class="thread" id="adminMsgThread">' +
@@ -2028,7 +2028,7 @@ function pageAdminTickets(apiOrigin) {
           (!isClosed
             ? '<div style="padding:16px;border-top:1px solid var(--border)">' +
               '<textarea id="adminReplyText" class="form-input" placeholder="Type your reply to the client..." style="min-height:100px;margin-bottom:10px"></textarea>' +
-              '<button class="btn btn-primary" onclick="sendAdminReply(\\'' + esc(ticketId) + '\\')" id="adminReplyBtn">Send Reply &amp; Notify Client</button>' +
+              '<button class="btn btn-primary" onclick="sendAdminReply(\'' + esc(ticketId) + '\')" id="adminReplyBtn">Send Reply &amp; Notify Client</button>' +
               '<div id="adminReplyAlert" class="alert" style="margin-top:8px"></div></div>'
             : '<div style="padding:16px;color:var(--muted);font-size:13px;border-top:1px solid var(--border)">This ticket is closed.</div>'
           );
@@ -2099,7 +2099,7 @@ function pageAdminTickets(apiOrigin) {
           return;
         }
         document.getElementById('ticketListPanel').innerHTML = tickets.map(t =>
-          '<div class="admin-ticket-item" data-id="' + esc(t.id) + '" onclick="openAdminTicket(\\'' + esc(t.id) + '\\')"' +
+          '<div class="admin-ticket-item" data-id="' + esc(t.id) + '" onclick="openAdminTicket('" + esc(t.id) + "')"' +
           ' style="padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.12s' + (t.id === activeId ? ';background:var(--bg3)' : '') + '">' +
           '<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:3px">' +
           '<strong style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px">' + esc(t.subject) + '</strong>' +
